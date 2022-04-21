@@ -1,0 +1,120 @@
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>New</title>
+    <style>
+        body {
+            margin: 0;
+            -ms-overflow-style: none;
+            /* IE and Edge */
+            scrollbar-width: none;
+            /* Firefox */
+        }
+
+        /* Hide scrollbar for Chrome, Safari and Opera */
+        body::-webkit-scrollbar {
+            display: none;
+        }
+
+        #a {
+
+            position: relative;
+            margin: 0;
+            padding: 0;
+            z-index: 99;
+        }
+
+        section {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+
+        }
+
+        .Page {
+            position: absolute;
+            top: 50%;
+            width: 50%;
+            left: 100px;
+            transform: translateY(-50%);
+        }
+
+        canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+        }
+
+        #empty-page {
+            height: 100vh;
+            width: 100vh;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="a">
+        <section id="About">
+            <div class="Page">
+                <h1>
+                    Title
+                </h1>
+                <p>
+                    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec laoreet tellus ut mauris sagittis,
+                    non
+                    suscipit dui condimentum. Suspendisse potenti. In quis metus id ipsum vestibulum tristique at at
+                    lorem.
+                    Sed
+                    at metus metus. Ut viverra venenatis mauris, vitae imperdiet quam tempus ac. Quisque quis enim
+                    elementum,
+                    pretium libero eget, placerat arcu. Praesent vulputate massa sit amet purus tempus, pharetra porta
+                    risus
+                    lobortis. Nulla convallis, sem posuere lacinia finibus, augue mi mollis quam, a dictum massa arcu
+                    sed
+                    dui.
+                    Morbi tortor ligula, elementum non dignissim nec, maximus eu arcu.
+                </p>
+            </div>
+        </section>
+        <section id="Projects">
+            <div class="Page">
+                <h1>
+                    Title 2
+                </h1>
+                <p>
+                    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec laoreet tellus ut mauris sagittis,
+                    non
+                    suscipit dui condimentum. Suspendisse potenti. In quis metus id ipsum vestibulum tristique at at
+                    lorem.
+                    Sed.
+                </p>
+            </div>
+        </section>
+        <section id="More">
+            <div class="Page">
+                <h1>
+                    Title 3
+                </h1>
+                <p>
+                    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec laoreet tellus ut mauris sagittis,
+                    non
+                    suscipit dui condimentum. Suspendisse potenti. In quis metus id ipsum vestibulum tristique at at
+                    lorem.
+                    Sed. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec laoreet tellus ut mauris
+                    sagittis,
+                    non
+                    suscipit dui condimentum. Suspendisse potenti. In quis metus id ipsum vestibulum tristique at at
+                    lorem.
+                    Sed.
+                </p>
+            </div>
+        </section>
+    </div>
+
+</body>
+<script type="module" src="js/index.js"></script>
+
+
+</html>
