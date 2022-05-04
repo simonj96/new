@@ -2,7 +2,7 @@ import * as THREE from 'https://cdn.skypack.dev/three@0.133';
 import { OrbitControls } from 'https://cdn.skypack.dev/three@0.133/examples/jsm/controls/OrbitControls.js';
 import { TrackballControls } from 'https://cdn.skypack.dev/three@0.133/examples/jsm/controls/TrackballControls.js';
 import { TWEEN } from 'https://cdn.skypack.dev/three@0.133/examples/jsm/libs/tween.module.min.js';
-
+import Stats from 'https://cdn.skypack.dev/three@0.133/examples/jsm/libs/stats.module.js';
 
 //Scene, camera and rendering:
 var scene = new THREE.Scene();
@@ -10,6 +10,7 @@ var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHei
 var renderer = new THREE.WebGLRenderer({ antialias: true, canvas: canvas, alpha: true });
 var loadingManager = new THREE.LoadingManager();
 var canvas;
+var stats;
 
 //Controls:
 var mouse = new THREE.Vector2();
@@ -31,27 +32,73 @@ var mouseX;
 var mouseY;
 var theta = 0;
 var phi = 0;
+var beginTime = Date.now();
+var prevTime = beginTime;
+
 
 //Booleans
 var zoomInEnabled = false;
+var enableAnimationLoop = false;
 
+var c = 0;
+var filterStrength = 20;
+var frameTime = 0, lastLoop = new Date, thisLoop;
+function asdf() {
+    var thisFrameTime = (thisLoop=new Date) - lastLoop;
+    frameTime+= (thisFrameTime - frameTime) / filterStrength;
+    lastLoop = thisLoop;
+}
+var latestFPSarray = [];
+var storedFPSCounter = 0;
+var currentFPS = 0;
+setInterval(function(){
+    if(frameTime != null && frameTime > 0){
+        currentFPS = 1000/frameTime;
+        latestFPSarray.push(currentFPS);
+        storedFPSCounter++;
+        checkForBadPerformance();
+    } 
+  },1000);
 //Animation loop
 function animate() {
-    requestAnimationFrame(animate);
 
+    requestAnimationFrame(animate);
+    if(!enableAnimationLoop) {
+        return;
+    }
+    beginTime = Date.now();
+ 
+    asdf();
     delta = clock.getDelta();
 
     cube.rotation.x += 0.01 + 1 * delta;
     cube.rotation.y += 0.01 + 1 * delta;
 
     updateCamera();
-
+    
+    stats.update();
+    
     cameraTarget = controls.target;
     controls.update();
     controls2.target.set(cameraTarget.x, cameraTarget.y, cameraTarget.z);
     controls2.update();
     renderer.render(scene, camera);
     TWEEN.update();
+}
+
+
+function checkForBadPerformance(){
+    var sum = 0;
+    for (let index = 0; index < latestFPSarray.length; index++) {
+        sum += latestFPSarray[index];
+    }
+    var avg = sum/latestFPSarray.length;
+
+    if(avg < 120) {
+        //Disable shadows (maybe not needed if baked shadows)
+        //Show potato prompt,
+        console.log("Average fps is: "+ avg);
+    }
 }
 
 function init() {
@@ -69,6 +116,8 @@ function init() {
     camera.position.y = 1.3;
     camera.position.x = 0;
 
+    stats = new Stats();
+    document.body.appendChild(stats.dom);
     addLighting();
 
     renderer.domElement.addEventListener('click', onClick, false);
@@ -114,14 +163,13 @@ function init() {
     console.log(controls2);
     scene.add(new THREE.AxesHelper(500));
 
-
-
+    setTimeout(setOpacity, 500);
 }
 
 function setRenderSettings() {
 
-    renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    //renderer.shadowMap.enabled = true;
+    //renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setSize(window.innerWidth, window.innerHeight);
     //renderer.setClearColor(0x000000);
@@ -140,7 +188,21 @@ function setupLoadingManager() {
 
     loadingManager.onLoad = function () {
         console.log("loaded all resources");
+
     };
+}
+
+function closeIntro(){
+    //Disable loading div
+    const b = document.getElementById("b");
+    b.style.display = "none";
+
+    //Enable main div and start animation loop.
+    const a = document.getElementById("a");
+    a.style.display = "block";
+    
+    enableAnimationLoop = true;
+
 }
 
 function addMeshes() {
@@ -330,6 +392,7 @@ function scroll(event) {
     }
 }
 
+
 function onWindowResize() {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
@@ -339,6 +402,13 @@ function onWindowResize() {
     //renderer.render();
 }
 
+function setOpacity(){
+
+    document.getElementById("b").style.opacity = 0;
+    setTimeout(closeIntro, 500);
+}
+
 
 init();
 animate();
+

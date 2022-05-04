@@ -18,11 +18,11 @@
         }
 
         #a {
-
+            display: none;
             position: relative;
             margin: 0;
             padding: 0;
-            z-index: 99;
+            z-index: 98;
         }
 
         section {
@@ -50,31 +50,105 @@
             height: 100vh;
             width: 100vh;
         }
+        #b {
+           width: 100%;
+           height: 100%;
+           position: absolute;
+           display: flex;
+           justify-content: center;
+           flex-direction: column;
+           align-items: center;
+           z-index: 99;
+           
+           transition: opacity 0.2s ;
+           
+        }
+
+        #potato{
+            width:35%;
+            background-color: aqua;
+            position: absolute;
+            justify-content: center;
+            align-items: center;
+            flex-direction: row;
+            display: flex;
+            z-index: 101;
+            bottom: 10%;
+            right:0;
+        }
+
+        /* LOADING CIRCLE */
+        .lds-ring {
+            display: inline-block;
+            position: relative;
+            width: 80px;
+            height: 80px;   
+        }
+        .lds-ring div {
+            box-sizing: border-box;
+            display: block;
+            position: absolute;
+            width: 64px;
+            height: 64px;
+            margin: 8px;
+            border: 8px solid rgb(2, 2, 2);
+            border-radius: 50%;
+            animation: lds-ring 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+            border-color: rgb(0, 0, 0) transparent transparent transparent;
+        }
+        .lds-ring div:nth-child(1) {
+            animation-delay: -0.45s;
+        }
+        .lds-ring div:nth-child(2) {
+            animation-delay: -0.3s;
+        }
+        .lds-ring div:nth-child(3) {
+            animation-delay: -0.15s;
+        }
+        @keyframes lds-ring {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }       
+        }
+        span {
+            display: flex;
+            align-items: center;
+            
+        }
+        span p {
+            display:inline;
+            
+        }
+        span img {
+            display:inline;
+            
+        }
     </style>
 </head>
 
 <body>
+    <div id="potato">
+        <span>
+            <img src="https://i.gyazo.com/82ca2966b5fb221d9af00be8f5c98d4f.png" width="48" height="48"></img>
+            <p>Uh oh! The website is running slow and have disabled shadows, consider enabling the "Simple View" below!</p>
+        </span>
+    </div>
+<div id="b">
+    <div class="lds-ring"><div></div><div></div><div></div><div></div></div>
+</div>
 
+</div>
     <div id="a">
         <section id="About">
             <div class="Page">
                 <h1>
-                    Title
+                    Simon Johansson
                 </h1>
                 <p>
-                    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec laoreet tellus ut mauris sagittis,
-                    non
-                    suscipit dui condimentum. Suspendisse potenti. In quis metus id ipsum vestibulum tristique at at
-                    lorem.
-                    Sed
-                    at metus metus. Ut viverra venenatis mauris, vitae imperdiet quam tempus ac. Quisque quis enim
-                    elementum,
-                    pretium libero eget, placerat arcu. Praesent vulputate massa sit amet purus tempus, pharetra porta
-                    risus
-                    lobortis. Nulla convallis, sem posuere lacinia finibus, augue mi mollis quam, a dictum massa arcu
-                    sed
-                    dui.
-                    Morbi tortor ligula, elementum non dignissim nec, maximus eu arcu.
+                    Hej, jag heter Simon Johansson och är utbildad civilingenjör.
                 </p>
             </div>
         </section>
