@@ -4,12 +4,13 @@ import { TrackballControls } from 'https://cdn.skypack.dev/three@0.133/examples/
 import { TWEEN } from 'https://cdn.skypack.dev/three@0.133/examples/jsm/libs/tween.module.min.js';
 import Stats from 'https://cdn.skypack.dev/three@0.133/examples/jsm/libs/stats.module.js';
 
+
 //Scene, camera and rendering:
 var scene = new THREE.Scene();
 var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-var renderer = new THREE.WebGLRenderer({ antialias: true, canvas: canvas, alpha: true });
+var renderer;
 var loadingManager = new THREE.LoadingManager();
-var canvas;
+
 var stats;
 
 //Controls:
@@ -17,7 +18,6 @@ var mouse = new THREE.Vector2();
 var raycaster = new THREE.Raycaster();
 var controls;
 var controls2;
-var orbit;
 
 //Meshes:
 var cube;
@@ -32,52 +32,46 @@ var mouseX;
 var mouseY;
 var theta = 0;
 var phi = 0;
+var radius = 3;
 var beginTime = Date.now();
-var prevTime = beginTime;
-
+var filterStrength = 20;
+var frameTime = 0, lastLoop = new Date, thisLoop;
+var latestFPSarray = [];
+var storedFPSCounter = 0;
+var currentFPS = 0;
+var endPosition = new THREE.Vector3();
+var cameraZoomSpeed = 15;
 
 //Booleans
 var zoomInEnabled = false;
 var enableAnimationLoop = false;
+var enableMouseRotation = true;
+var zoom = false;
+var disableFPSChecker = false;
 
-var c = 0;
-var filterStrength = 20;
-var frameTime = 0, lastLoop = new Date, thisLoop;
-function asdf() {
-    var thisFrameTime = (thisLoop=new Date) - lastLoop;
-    frameTime+= (thisFrameTime - frameTime) / filterStrength;
-    lastLoop = thisLoop;
-}
-var latestFPSarray = [];
-var storedFPSCounter = 0;
-var currentFPS = 0;
-setInterval(function(){
-    if(frameTime != null && frameTime > 0){
-        currentFPS = 1000/frameTime;
-        latestFPSarray.push(currentFPS);
-        storedFPSCounter++;
-        checkForBadPerformance();
-    } 
-  },1000);
+//DOM
+var statsDOM;
+var canvas;
+
 //Animation loop
 function animate() {
 
     requestAnimationFrame(animate);
-    if(!enableAnimationLoop) {
+    if (!enableAnimationLoop) {
         return;
     }
     beginTime = Date.now();
- 
-    asdf();
+
+    calculateFPS();
     delta = clock.getDelta();
 
     cube.rotation.x += 0.01 + 1 * delta;
     cube.rotation.y += 0.01 + 1 * delta;
 
     updateCamera();
-    
+
     stats.update();
-    
+
     cameraTarget = controls.target;
     controls.update();
     controls2.target.set(cameraTarget.x, cameraTarget.y, cameraTarget.z);
@@ -85,26 +79,34 @@ function animate() {
     renderer.render(scene, camera);
     TWEEN.update();
 }
-
-
-function checkForBadPerformance(){
+var sentMsg = false;
+function evaluatePerformance() {
     var sum = 0;
     for (let index = 0; index < latestFPSarray.length; index++) {
         sum += latestFPSarray[index];
     }
-    var avg = sum/latestFPSarray.length;
+    var avg = sum / latestFPSarray.length;
 
-    if(avg < 120) {
-        //Disable shadows (maybe not needed if baked shadows)
-        //Show potato prompt,
-        console.log("Average fps is: "+ avg);
+    if (avg < 150) {
+        //Return true, we are lagging
+        return true;
+    } else {
+        return false;
     }
 }
 
+function sendPotatoMsg() {
+    potdiv.style.right = "0";
+}
+
+function hidePotatoMsg() {
+    potdiv.style.right = "-500%";
+}
 function init() {
 
-    canvas = document.createElement('canvas');
-    canvas.width = 32; //32
+    canvas = document.getElementById('three');
+
+    canvas.width = 32;
     canvas.height = window.innerHeight;
 
     setRenderSettings();
@@ -117,17 +119,16 @@ function init() {
     camera.position.x = 0;
 
     stats = new Stats();
-    document.body.appendChild(stats.dom);
+    statsDOM = document.body.appendChild(stats.dom);
     addLighting();
 
     renderer.domElement.addEventListener('click', onClick, false);
     renderer.domElement.addEventListener('mousemove', onDocumentMouseMove, false);
-    //
-
 
     window.addEventListener("resize", () => {
         onWindowResize();
     });
+
     controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.enableZoom = false;
@@ -140,6 +141,7 @@ function init() {
     controls.rotateSpeed = 0.5;
     //controls.enableRotate = false;
     //Orbitcontrol center
+
     controls.target.set(0, 1, 0);
 
     controls.mouseButtons = {
@@ -163,11 +165,23 @@ function init() {
     console.log(controls2);
     scene.add(new THREE.AxesHelper(500));
 
-    setTimeout(setOpacity, 500);
+    //setTimeout(hideLoadingScreen, 500);
+    doThis();
+}
+
+function doThis() {
+    console.log("sadsas");
+    CSSPlugin.defaultTransformPerspective = 800;
+    gsap.to(".intro-box", { duration: 4, rotation: 360, repeat: 2, yoyo: true });
+    gsap.fromTo(".intro-box", { opacity: 0 }, { duration: 2, opacity: 1 });
+    gsap.fromTo(".intro-box", { scale: 0.7 }, { duration: 2, scale: 1, repeat: 4, yoyo: true });
+    //gsap.to(".box", { duration: 2, x: -300, stagger: 1 });
+    gsap.fromTo(".box", { opacity: 0 }, { duration: 2, stagger: 1, opacity: 1 });
+
 }
 
 function setRenderSettings() {
-
+    renderer = new THREE.WebGLRenderer({ antialias: true, canvas: canvas, alpha: true })
     //renderer.shadowMap.enabled = true;
     //renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.setPixelRatio(window.devicePixelRatio);
@@ -192,7 +206,7 @@ function setupLoadingManager() {
     };
 }
 
-function closeIntro(){
+function closeIntro() {
     //Disable loading div
     const b = document.getElementById("b");
     b.style.display = "none";
@@ -200,7 +214,7 @@ function closeIntro(){
     //Enable main div and start animation loop.
     const a = document.getElementById("a");
     a.style.display = "block";
-    
+
     enableAnimationLoop = true;
 
 }
@@ -289,9 +303,6 @@ function zoomIn() {
     zoom = true;
 }
 
-var zoom = false;
-var endPosition = new THREE.Vector3();
-var cameraZoomSpeed = 15;
 
 function updateCamera() {
 
@@ -346,12 +357,6 @@ function onClick() {
     }
 }
 
-var radius = 3;
-var enableMouseRotation = true;
-
-document.body.addEventListener('mousemove', e => { onDocumentMouseMove(e) });
-document.body.addEventListener('wheel', e => { scroll(e) });
-
 function onDocumentMouseMove(event) {
     event.preventDefault();
 
@@ -392,7 +397,6 @@ function scroll(event) {
     }
 }
 
-
 function onWindowResize() {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
@@ -402,12 +406,66 @@ function onWindowResize() {
     //renderer.render();
 }
 
-function setOpacity(){
-
+function hideLoadingScreen() {
     document.getElementById("b").style.opacity = 0;
     setTimeout(closeIntro, 500);
 }
 
+function calculateFPS() {
+    var thisFrameTime = (thisLoop = new Date) - lastLoop;
+    frameTime += (thisFrameTime - frameTime) / filterStrength;
+    lastLoop = thisLoop;
+}
+
+setInterval(function () {
+    if (disableFPSChecker) {
+        return;
+    }
+    if (frameTime != null && frameTime > 0) {
+        currentFPS = 1000 / frameTime;
+        latestFPSarray.push(currentFPS);
+        if (latestFPSarray.length >= 4) {
+            latestFPSarray.shift();
+        }
+        if (evaluatePerformance()) {
+            sendPotatoMsg();
+        }
+    }
+}, 1000);
+
+function disable3D() {
+    enableAnimationLoop = false;
+    canvas.style.display = "none";
+    disableFPSChecker = true;
+    hidePotatoMsg();
+}
+
+function enable3D() {
+    enableAnimationLoop = true;
+    disableFPSChecker = false;
+    canvas.style.display = "block";
+}
+
+//Potato switch
+var pot;
+pot = document.getElementById("pot");
+pot.addEventListener('change', function () {
+    if (this.checked) {
+        //Checked
+        //Remove 3D, implement Simple View
+        disable3D();
+    } else {
+        //Return 3D environment and resume animation loop.
+        enable3D();
+    }
+});
+
+//Potato div
+var potdiv;
+potdiv = document.getElementById("potatoDiv");
+
+document.body.addEventListener('mousemove', e => { onDocumentMouseMove(e) });
+document.body.addEventListener('wheel', e => { scroll(e) });
 
 init();
 animate();
