@@ -7,7 +7,7 @@ import Stats from 'https://cdn.skypack.dev/three@0.133/examples/jsm/libs/stats.m
 
 //Scene, camera and rendering:
 var scene = new THREE.Scene();
-var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+var camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 1000);
 var renderer;
 var loadingManager = new THREE.LoadingManager();
 
@@ -44,7 +44,7 @@ var cameraZoomSpeed = 15;
 
 //Booleans
 var zoomInEnabled = false;
-var enableAnimationLoop = false;
+var enableAnimationLoop = true;
 var enableMouseRotation = true;
 var zoom = false;
 var disableFPSChecker = false;
@@ -87,7 +87,7 @@ function evaluatePerformance() {
     }
     var avg = sum / latestFPSarray.length;
 
-    if (avg < 150) {
+    if (avg < 25) {
         //Return true, we are lagging
         return true;
     } else {
@@ -114,7 +114,7 @@ function init() {
     addMeshes();
 
     //Camera initial position
-    camera.position.z = 1;
+    camera.position.z = 1.5;
     camera.position.y = 1.3;
     camera.position.x = 0;
 
@@ -123,7 +123,7 @@ function init() {
     addLighting();
 
     renderer.domElement.addEventListener('click', onClick, false);
-    renderer.domElement.addEventListener('mousemove', onDocumentMouseMove, false);
+    //renderer.domElement.addEventListener('mousemove', onDocumentMouseMove, false);
 
     window.addEventListener("resize", () => {
         onWindowResize();
@@ -167,16 +167,40 @@ function init() {
 
     //setTimeout(hideLoadingScreen, 500);
     doThis();
+
 }
 
 function doThis() {
-    console.log("sadsas");
+
     CSSPlugin.defaultTransformPerspective = 800;
-    gsap.to(".intro-box", { duration: 4, rotation: 360, repeat: 2, yoyo: true });
-    gsap.fromTo(".intro-box", { opacity: 0 }, { duration: 2, opacity: 1 });
-    gsap.fromTo(".intro-box", { scale: 0.7 }, { duration: 2, scale: 1, repeat: 4, yoyo: true });
-    //gsap.to(".box", { duration: 2, x: -300, stagger: 1 });
-    gsap.fromTo(".box", { opacity: 0 }, { duration: 2, stagger: 1, opacity: 1 });
+    gsap.set(".intro-box", { position: "absolute", margin: "auto", left: "50%" });
+
+    gsap.fromTo(".intro-box", { opacity: 0 }, { duration: 0.5, opacity: 1 });
+    gsap.to(".intro-box", { duration: 2, rotation: 360, repeat: 2, yoyo: true });
+    gsap.fromTo(".intro-box", { scale: 0.6 }, { duration: 2, scale: 1, repeat: 2, yoyo: true, onComplete: fadeInBoxes });
+
+    gsap.fromTo(".scroll-downs", { opacity: 0 }, { duration: 1, opacity: 1 });
+}
+function fadeInBoxes() {
+    gsap.fromTo(".intro-box", { opacity: 1 }, { duration: 0.5, opacity: 0 });
+
+    gsap.fromTo(".fadeAndSlide", { x: 300 }, {
+        x: 0,
+        duration: 1,
+        stagger: {
+            amount: 2
+        }
+    });
+    gsap.fromTo(".fadeAndSlide", { opacity: 0 }, {
+        opacity: 1,
+        duration: 2,
+        stagger: {
+            amount: 2
+        }
+    });
+
+}
+function returnSettings() {
 
 }
 
@@ -367,33 +391,68 @@ function onDocumentMouseMove(event) {
         return;
     }
 
-    theta = - mouseX / 7;
-    phi = Math.PI / 2;
+    theta = - mouseX;
+    phi = 0;
 
-    camera.position.x = radius * Math.sin(theta * Math.PI / 360)
-        * Math.cos(phi * Math.PI / 360);
+    updateCamera2();
+
+}
+
+function updateCamera2() {
+
+    camera.position.x = radius * Math.sin(theta * Math.PI / 720);
+
     //camera.position.y = radius * Math.sin(phi * Math.PI / 360);
-    camera.position.z = radius * Math.cos(theta * Math.PI / 360)
-        * Math.cos(phi * Math.PI / 360);
+    camera.position.z = radius * Math.cos(theta * Math.PI / 720);
+
     camera.updateMatrix();
-
 }
 
-function updateCameraControlRadius() {
-    radius = camera.position.distanceTo(controls.target);
-}
-function test() {
-    console.log("asdfas");
-}
 
 function scroll(event) {
+    console.log("radius: " + radius);
     if (event.deltaY < 0) {
         console.log('scrolling up');
-
+        if (radius >= 1.5) {
+            radius -= 0.1;
+        }
+        updateCamera2();
     }
     else if (event.deltaY > 0) {
         console.log('scrolling down');
+        if (radius <= 5)
+            radius += 0.1;
+        updateCamera2();
+    }
+}
 
+var returnButton = document.getElementById("return-to-top");
+window.onscroll = function () { scrollFunction() };
+function scrollFunction() {
+    if (document.body.scrollTop > 200 || document.documentElement.scrollTop > 200) {
+        console.log("not at top");
+        document.getElementById("scroller").style.opacity = 0;
+        returnButton.style.opacity = 0;
+
+    } else {
+        document.getElementById("scroller").style.opacity = 1;
+        returnButton.style.opacity = 0;
+
+    }
+    if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight) {
+
+        returnButton.style.display = "block";
+        returnButton.style.opacity = 1;
+
+    }
+}
+
+document.getElementById("return-to-top").onclick = goToTop;
+
+function goToTop() {
+    if (returnButton.style.opacity != 0) {
+        console.log("clicked button");
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 }
 
@@ -404,11 +463,6 @@ function onWindowResize() {
     renderer.setSize(window.innerWidth, window.innerHeight);
     //composer.setSize(width, height);
     //renderer.render();
-}
-
-function hideLoadingScreen() {
-    document.getElementById("b").style.opacity = 0;
-    setTimeout(closeIntro, 500);
 }
 
 function calculateFPS() {
@@ -466,6 +520,7 @@ potdiv = document.getElementById("potatoDiv");
 
 document.body.addEventListener('mousemove', e => { onDocumentMouseMove(e) });
 document.body.addEventListener('wheel', e => { scroll(e) });
+
 
 init();
 animate();
