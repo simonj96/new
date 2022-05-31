@@ -68,6 +68,9 @@ function animate() {
     cube.rotation.x += 0.01 + 1 * delta;
     cube.rotation.y += 0.01 + 1 * delta;
 
+    radius = minrad + ((window.innerHeight+window.scrollY)/document.body.offsetHeight) * radScalar;
+
+    updateCamera2();
     updateCamera();
 
     stats.update();
@@ -91,16 +94,20 @@ function evaluatePerformance() {
         //Return true, we are lagging
         return true;
     } else {
+       
         return false;
     }
 }
 
 function sendPotatoMsg() {
     potdiv.style.right = "0";
+    freezeBool = true;
+    setTimeout(hidePotatoMsg, 4000);
 }
 
 function hidePotatoMsg() {
     potdiv.style.right = "-500%";
+    freezeBool = false;
 }
 function init() {
 
@@ -408,11 +415,15 @@ function updateCamera2() {
     camera.updateMatrix();
 }
 
+var radScalar = 2;
+var minrad = 1.5;
 
 function scroll(event) {
-    console.log("radius: " + radius);
+    doScroll();
+    return;
     if (event.deltaY < 0) {
         console.log('scrolling up');
+        
         if (radius >= 1.5) {
             radius -= 0.1;
         }
@@ -429,6 +440,7 @@ function scroll(event) {
 var returnButton = document.getElementById("return-to-top");
 window.onscroll = function () { scrollFunction() };
 function scrollFunction() {
+  
     if (document.body.scrollTop > 200 || document.documentElement.scrollTop > 200) {
         console.log("not at top");
         document.getElementById("scroller").style.opacity = 0;
@@ -440,7 +452,7 @@ function scrollFunction() {
 
     }
     if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight) {
-
+        //at bottom
         returnButton.style.display = "block";
         returnButton.style.opacity = 1;
 
@@ -470,7 +482,7 @@ function calculateFPS() {
     frameTime += (thisFrameTime - frameTime) / filterStrength;
     lastLoop = thisLoop;
 }
-
+var freezeBool = false;
 setInterval(function () {
     if (disableFPSChecker) {
         return;
@@ -481,7 +493,7 @@ setInterval(function () {
         if (latestFPSarray.length >= 4) {
             latestFPSarray.shift();
         }
-        if (evaluatePerformance()) {
+        if (evaluatePerformance() && !freezeBool) {
             sendPotatoMsg();
         }
     }
