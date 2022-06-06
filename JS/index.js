@@ -3,6 +3,7 @@ import { OrbitControls } from 'https://cdn.skypack.dev/three@0.133/examples/jsm/
 import { TrackballControls } from 'https://cdn.skypack.dev/three@0.133/examples/jsm/controls/TrackballControls.js';
 import { TWEEN } from 'https://cdn.skypack.dev/three@0.133/examples/jsm/libs/tween.module.min.js';
 import Stats from 'https://cdn.skypack.dev/three@0.133/examples/jsm/libs/stats.module.js';
+import { GLTFLoader } from 'https://cdn.skypack.dev/three@0.133/examples/jsm/loaders/GLTFLoader.js';
 
 
 //Scene, camera and rendering:
@@ -22,6 +23,7 @@ var controls2;
 //Meshes:
 var cube;
 var floor;
+var monitor;
 
 //Variables:
 var clock = new THREE.Clock();
@@ -41,6 +43,7 @@ var storedFPSCounter = 0;
 var currentFPS = 0;
 var endPosition = new THREE.Vector3();
 var cameraZoomSpeed = 15;
+var cameraStartPosition = new THREE.Vector3();
 
 //Booleans
 var zoomInEnabled = false;
@@ -48,7 +51,7 @@ var enableAnimationLoop = true;
 var enableMouseRotation = true;
 var zoom = false;
 var disableFPSChecker = false;
-
+var enableCameraMovement = false;
 //DOM
 var statsDOM;
 var canvas;
@@ -65,12 +68,12 @@ function animate() {
     calculateFPS();
     delta = clock.getDelta();
 
-    cube.rotation.x += 0.01 + 1 * delta;
-    cube.rotation.y += 0.01 + 1 * delta;
+    radius = minrad + ((window.scrollY) / document.body.offsetHeight) * radScalar;
 
-    radius = minrad + ((window.innerHeight+window.scrollY)/document.body.offsetHeight) * radScalar;
-
-    updateCamera2();
+    calculateCameraRotation();
+    if (enableCameraMovement) {
+        camera.position.lerp(cameraMoveTarget, 0.05);
+    }
     updateCamera();
 
     stats.update();
@@ -82,7 +85,7 @@ function animate() {
     renderer.render(scene, camera);
     TWEEN.update();
 }
-var sentMsg = false;
+
 function evaluatePerformance() {
     var sum = 0;
     for (let index = 0; index < latestFPSarray.length; index++) {
@@ -94,7 +97,7 @@ function evaluatePerformance() {
         //Return true, we are lagging
         return true;
     } else {
-       
+
         return false;
     }
 }
@@ -109,6 +112,55 @@ function hidePotatoMsg() {
     potdiv.style.right = "-500%";
     freezeBool = false;
 }
+
+function loadModels() {
+    const loader = new GLTFLoader(loadingManager);
+    loader.load('models/composition.glb', function (gltf) {
+
+        const mesh = gltf.scene;
+
+        const s = 1;
+        mesh.scale.set(s, s, s);
+        mesh.position.x = 0;
+        mesh.position.y = 0;
+        mesh.position.z = 4;
+
+        mesh.traverse(function (child) {
+            if (child.isMesh) {
+
+
+
+                if (child.material.map != null) {
+
+                    var tmp = child.material;
+                    child.material = new THREE.MeshLambertMaterial({
+                        map: tmp.map,
+                        color: new THREE.Color("rgb(100, 125, 5)"),
+                    })
+                    //child.material.color = );
+                    //child.material.color.setHSL(0.095, 1, 0.75);
+                    child.material.flatShading = false;
+                    child.geometry.computeVertexNormals();
+
+                    if (child.material.map) child.material.map.anisotropy = 8;
+                    child.material.needUpdate = true;
+                    tmp.dispose();
+                }
+            }
+        });
+
+        //Way to traverse mesh and change stuff
+
+
+        scene.add(mesh);
+
+    }, undefined, function (error) {
+
+        console.error(error);
+
+    });
+
+}
 function init() {
 
     canvas = document.getElementById('three');
@@ -121,9 +173,15 @@ function init() {
     addMeshes();
 
     //Camera initial position
-    camera.position.z = 1.5;
-    camera.position.y = 1.3;
+
+    camera.position.y = 3.5;
     camera.position.x = 0;
+    camera.position.z = 1.8;
+
+    cameraStartPosition.copy(camera.position);
+    cameraMoveTarget.copy(camera.position);
+
+    enableCameraMovement = true;
 
     stats = new Stats();
     statsDOM = document.body.appendChild(stats.dom);
@@ -139,8 +197,8 @@ function init() {
     controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.enableZoom = false;
-    controls.minDistance = 1;
-    controls.maxDistance = 5;
+    controls.minDistance = 0;
+
     controls.maxAzimuthAngle = Math.PI / 2;
     controls.minAzimuthAngle = -Math.PI / 2;
     controls.minPolarAngle = Math.PI / 5;
@@ -149,7 +207,7 @@ function init() {
     //controls.enableRotate = false;
     //Orbitcontrol center
 
-    controls.target.set(0, 1, 0);
+    controls.target.set(0, 2.5, 0);
 
     controls.mouseButtons = {
         LEFT: '',
@@ -170,57 +228,58 @@ function init() {
     controls2.target.set(cameraTarget.x, cameraTarget.y, cameraTarget.z);
     controls2.update();
     console.log(controls2);
-    scene.add(new THREE.AxesHelper(500));
+    //scene.add(new THREE.AxesHelper(500));
 
     //setTimeout(hideLoadingScreen, 500);
-    doThis();
 
+    reset();
 }
 
-function doThis() {
+function enableHTML() {
 
     CSSPlugin.defaultTransformPerspective = 800;
-    gsap.set(".intro-box", { position: "absolute", margin: "auto", left: "50%" });
 
-    gsap.fromTo(".intro-box", { opacity: 0 }, { duration: 0.5, opacity: 1 });
-    gsap.to(".intro-box", { duration: 2, rotation: 360, repeat: 2, yoyo: true });
-    gsap.fromTo(".intro-box", { scale: 0.6 }, { duration: 2, scale: 1, repeat: 2, yoyo: true, onComplete: fadeInBoxes });
-
-    gsap.fromTo(".scroll-downs", { opacity: 0 }, { duration: 1, opacity: 1 });
+    //Should happen when all is loaded, use loadmanager !
+    fadeInBoxes();
 }
 function fadeInBoxes() {
-    gsap.fromTo(".intro-box", { opacity: 1 }, { duration: 0.5, opacity: 0 });
+
 
     gsap.fromTo(".fadeAndSlide", { x: 300 }, {
         x: 0,
         duration: 1,
         stagger: {
             amount: 2
-        }
+        },
+        onComplete: allowScrolling
     });
-    gsap.fromTo(".fadeAndSlide", { opacity: 0 }, {
+    gsap.fromTo(".fadeAndSlide", { opacity: 0, }, {
         opacity: 1,
-        duration: 2,
+        duration: 1.6,
         stagger: {
             amount: 2
-        }
+        },
+
+
     });
 
 }
-function returnSettings() {
 
+function allowScrolling() {
+    document.body.style = "overflow: scroll";
 }
 
 function setRenderSettings() {
-    renderer = new THREE.WebGLRenderer({ antialias: true, canvas: canvas, alpha: true })
+    renderer = new THREE.WebGLRenderer({ antialias: true, canvas: canvas })
     //renderer.shadowMap.enabled = true;
     //renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setSize(window.innerWidth, window.innerHeight);
-    //renderer.setClearColor(0x000000);
+    renderer.setClearColor(new THREE.Color("rgb(55, 120, 200)"));
 
-    //renderer.toneMapping = THREE.ReinhardToneMapping;
-    //renderer.toneMappingExposure = Math.pow(1.5, 4.0);
+    renderer.toneMapping = THREE.ReinhardToneMapping;
+    //renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = Math.pow(1.5, 4.0);
     document.body.appendChild(renderer.domElement);
 
 }
@@ -233,76 +292,16 @@ function setupLoadingManager() {
 
     loadingManager.onLoad = function () {
         console.log("loaded all resources");
-
+        enableHTML();
     };
 }
 
-function closeIntro() {
-    //Disable loading div
-    const b = document.getElementById("b");
-    b.style.display = "none";
-
-    //Enable main div and start animation loop.
-    const a = document.getElementById("a");
-    a.style.display = "block";
-
-    enableAnimationLoop = true;
-
-}
-
 function addMeshes() {
-    addFloor();
-    addTestCube();
+    loadModels();
 }
 
 function addLighting() {
-    scene.add(new THREE.AmbientLight("white", 0.3));
-
-    //Basic Sunlight
-    const sunLight = new THREE.DirectionalLight(0xfafafafa, 0.1, 100);
-    sunLight.position.set(0, 50, 0); //default; light shining from top
-    sunLight.castShadow = true; // default false
-    scene.add(sunLight)
-
-    //Sunlight shadow settings
-    sunLight.shadow.mapSize.width = 72000; // default
-    sunLight.shadow.mapSize.height = 72000; // default
-    sunLight.shadow.camera.near = 0.1; // default
-    sunLight.shadow.camera.far = 100; // default
-    sunLight.shadow.camera.left = -40;
-    sunLight.shadow.camera.right = 40;
-    sunLight.shadow.camera.top = 40;
-    sunLight.shadow.camera.bottom = -40;
-    sunLight.shadow.bias = - 0.001;
-
-}
-
-function addFloor() {
-    const geometry = new THREE.BoxGeometry(10, 10, 0.01);
-    const material = new THREE.MeshStandardMaterial({ color: 0xffffff });
-    material.color.setHSL(0.095, 1, 0.75);
-    floor = new THREE.Mesh(geometry, material);
-    floor.receiveShadow = true;
-
-    //Initial floor position
-    floor.position.y = -0.01;
-    floor.position.x = 0;
-    floor.rotation.x = - Math.PI / 2;
-
-    scene.add(floor);
-}
-
-function addTestCube() {
-    const geometry = new THREE.BoxGeometry();
-    const material = new THREE.MeshStandardMaterial({ color: 0x00ff00 });
-    cube = new THREE.Mesh(geometry, material);
-    cube.receiveShadow = true;
-    cube.castShadow = true;
-    //Initial cube position
-    cube.position.y = 1;
-
-    scene.add(cube);
-    interactableMeshes.push(cube);
+    scene.add(new THREE.AmbientLight("white", 3));
 }
 
 var tube
@@ -333,7 +332,6 @@ function zoomIn() {
     endPosition = new THREE.Vector3(cube.position.x, cube.position.y, cube.position.z + 2);
     zoom = true;
 }
-
 
 function updateCamera() {
 
@@ -397,59 +395,71 @@ function onDocumentMouseMove(event) {
     if (!enableMouseRotation) {
         return;
     }
+    theta = (event.clientX + window.innerWidth / 2) / (window.innerWidth * 2);
 
-    theta = - mouseX;
     phi = 0;
 
-    updateCamera2();
+    calculateCameraRotation();
 
 }
+var enableCameraRotation = false;
+var cameraMoveTarget = new THREE.Vector3();
+var enableFreeMode = false;
+function calculateCameraRotation() {
 
-function updateCamera2() {
-
-    camera.position.x = radius * Math.sin(theta * Math.PI / 720);
-
+    if (enableCameraRotation) {
+        //camera.position.x = 
+        cameraMoveTarget.x = radius * Math.sin(theta * Math.PI - Math.PI / 2);
+    }
     //camera.position.y = radius * Math.sin(phi * Math.PI / 360);
-    camera.position.z = radius * Math.cos(theta * Math.PI / 720);
+    cameraMoveTarget.y = camera.position.y;
+    //camera.position.z = 
+    if (enableFreeMode) {
+        cameraMoveTarget.z = radius * Math.cos(theta * Math.PI - Math.PI / 2);
+    } else {
+        cameraMoveTarget.z = radius;
+    }
+    //camera.updateMatrix();
 
-    camera.updateMatrix();
 }
 
-var radScalar = 2;
-var minrad = 1.5;
+var radScalar = 10;
+var minrad = 1.8;
 
 function scroll(event) {
-    doScroll();
+
     return;
     if (event.deltaY < 0) {
         console.log('scrolling up');
-        
+
         if (radius >= 1.5) {
             radius -= 0.1;
         }
-        updateCamera2();
+        calculateCameraRotation();
     }
     else if (event.deltaY > 0) {
         console.log('scrolling down');
         if (radius <= 5)
             radius += 0.1;
-        updateCamera2();
+        calculateCameraRotation();
     }
 }
 
 var returnButton = document.getElementById("return-to-top");
 window.onscroll = function () { scrollFunction() };
 function scrollFunction() {
-  
+
     if (document.body.scrollTop > 200 || document.documentElement.scrollTop > 200) {
         console.log("not at top");
+        enableFreeMode = true;
+        enableCameraRotation = true;
         document.getElementById("scroller").style.opacity = 0;
         returnButton.style.opacity = 0;
 
     } else {
         document.getElementById("scroller").style.opacity = 1;
         returnButton.style.opacity = 0;
-
+        reset();
     }
     if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight) {
         //at bottom
@@ -457,6 +467,12 @@ function scrollFunction() {
         returnButton.style.opacity = 1;
 
     }
+}
+
+function reset() {
+    cameraMoveTarget.copy(cameraStartPosition);
+    enableFreeMode = false;
+    enableCameraRotation = false;
 }
 
 document.getElementById("return-to-top").onclick = goToTop;

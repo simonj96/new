@@ -20,12 +20,13 @@
             /* Firefox */
             background-color: #2196F3;
             font-family: 'Montserrat', sans-serif;
+            overflow: scroll;
 
         }
 
         html {
             scroll-behavior: smooth;
-            
+
         }
 
         /* Hide scrollbar for Chrome, Safari and Opera */
@@ -55,7 +56,7 @@
             -ms-flex-align: center;
             justify-content: center;
             padding-left: 5%;
-            width:82%;
+            width: 40%;
         }
 
         .fillPage p {
@@ -63,6 +64,7 @@
             margin-top: 30px;
             margin-bottom: 30px;
         }
+
         .Page {
 
             padding-left: 25px;
@@ -70,18 +72,30 @@
         }
 
         .Page h1 {
-           
+
             padding: 0;
-            margin-top:6px;
+            margin-top: 6px;
             font-size: 48px;
 
+        }
+
+        h1 {
+            color: #fafafa;
+        }
+
+        h2 {
+            color: #fafafa;
+        }
+
+        p {
+            color: #fafafa;
         }
 
 
         .Page h2 {
             font-size: 24px;
             font-weight: lighter;
-            margin-left: 10px;
+            margin-left: 0px;
             margin-top: 0;
             padding: 0;
         }
@@ -193,9 +207,9 @@
         .switch {
             position: relative;
             display: inline-block;
-            width: 60px;
+            width: 50px;
             height: 26px;
-            margin-left: 10px;
+            margin-right: 7px;
 
         }
 
@@ -214,7 +228,7 @@
             right: 0;
             bottom: 0;
             opacity: 0.5;
-            background-color: rgb(0, 221, 203);
+            background-color: rgb(156, 156, 156);
             -webkit-transition: .4s;
             transition: .4s;
         }
@@ -226,7 +240,7 @@
             width: 20px;
             left: 4px;
             bottom: 3px;
-            background-color: white;
+            background-color: rgb(255, 255, 255);
             -webkit-transition: .4s;
             transition: .4s;
         }
@@ -308,13 +322,6 @@
 
         }
 
-        .intro-box {
-            display: block;
-            min-height: 14px;
-            min-width: 14px;
-
-        }
-
         .green {
             background-color: green;
         }
@@ -344,17 +351,17 @@
             width: 100%;
 
         }
-        nav{
+
+        nav {
             align-items: center;
             display: flex;
         }
 
-      
+
 
         /* @Media */
-        @media only screen and (max-width: 484px) {
+        @media only screen and (max-width: 484px) {}
 
-        }
         @media only screen and (max-width: 767px) {
             .bar {
                 height: 7px;
@@ -539,6 +546,7 @@
 
         .Menu {
             position: fixed;
+            display: none;
             right: 25px;
             top: 0px;
             transform-origin: bottom right;
@@ -554,8 +562,8 @@
             text-decoration: none;
             cursor: pointer;
             opacity: 0.5;
-            color: rgb(0, 0, 0);
-            transition: opacity 1s;
+            color: rgb(255, 255, 255);
+            transition: opacity 0.5s;
         }
 
         .Menu a:hover {
@@ -574,8 +582,8 @@
             font-size: 28px;
             text-decoration: none;
             opacity: 0.5;
-            color: rgb(0, 0, 0);
-            transition: opacity 1s;
+            color: rgb(255, 255, 255);
+            transition: opacity 0.4s;
         }
 
         .Footer ul li a:hover {
@@ -585,12 +593,16 @@
         .Footer ul {
             list-style: none;
         }
-        #AboutH1{
+
+        #AboutH1 {
             margin: 5px;
             margin-bottom: 25px;
         }
-    </style>
 
+        .hidden {
+            opacity: 0;
+        }
+    </style>
 </head>
 
 <body>
@@ -631,71 +643,71 @@
         <div class="Front fillPage" id="front">
             <div class="asdf">
                 <div class="bar">
-                    <div class="box green fadeAndSlide"></div>
-                    <div class="box wideBox orange fadeAndSlide"></div>
-                    <div class="box grey fadeAndSlide"></div>
-                    <div class="circle grey fadeAndSlide"></div>
-                    <div class="box blue fadeAndSlide"></div>
-                    <div class="box widerBox blue fadeAndSlide"></div>
-                    <div class="box grey fadeAndSlide"></div>
-                    <div class="box widerBox blue fadeAndSlide"></div>
-                    <div class="box blue fadeAndSlide"></div>
-                    <div class="intro-box green"></div>
+                    <div class="box green fadeAndSlide hidden"></div>
+                    <div class="box wideBox orange fadeAndSlide hidden"></div>
+                    <div class="box grey fadeAndSlide hidden"></div>
+                    <div class="circle grey fadeAndSlide hidden"></div>
+                    <div class="box blue fadeAndSlide hidden"></div>
+                    <div class="box widerBox blue fadeAndSlide hidden"></div>
+                    <div class="box grey fadeAndSlide hidden"></div>
+                    <div class="box widerBox blue fadeAndSlide hidden"></div>
+                    <div class="box blue fadeAndSlide hidden"></div>
+
                 </div>
-                <div class="bar">
-                    <div class="box grey fadeAndSlide"></div>
-                    <div class="box widerBox blue fadeAndSlide"></div>
-                    <div class="box blue fadeAndSlide"></div>
-                    <div class="box widerBox blue fadeAndSlide"></div>
-                    <div class="box grey fadeAndSlide"></div>
-                    <div class="box wideBox orange fadeAndSlide"></div>
+                <div class="bar ">
+                    <div class="box grey fadeAndSlide hidden"></div>
+                    <div class="box widerBox blue fadeAndSlide hidden"></div>
+                    <div class="box blue fadeAndSlide hidden"></div>
+                    <div class="box widerBox blue fadeAndSlide hidden"></div>
+                    <div class="box grey fadeAndSlide hidden"></div>
+                    <div class="box wideBox orange fadeAndSlide hidden"></div>
                 </div>
-                <div class="bar">
-                    <div class="box widerBox blue fadeAndSlide"></div>
-                    <div class="box blue fadeAndSlide"></div>
-                    <div class="box grey fadeAndSlide"></div>
-                    <div class="box wideBox orange fadeAndSlide"></div>
+                <div class="bar ">
+                    <div class="box widerBox blue fadeAndSlide hidden"></div>
+                    <div class="box blue fadeAndSlide hidden"></div>
+                    <div class="box grey fadeAndSlide hidden"></div>
+                    <div class="box wideBox orange fadeAndSlide hidden"></div>
                 </div>
             </div>
             <div class="Page">
-                <h1 class="fadeAndSlide" style="margin-bottom: 0;">
+                <h1 class="fadeAndSlide hidden" style="margin-bottom: 0;">
                     Simon Johansson
                 </h1>
-                <h2 class="fadeAndSlide">
+                <h2 class="fadeAndSlide hidden">
                     Civil engineer in Interaction and Design.
                 </h2>
             </div>
             <div class="asdf">
                 <div class="bar">
-                    <div class="box green fadeAndSlide"></div>
-                    <div class="box wideBox orange fadeAndSlide"></div>
-                    <div class="box grey fadeAndSlide"></div>
-                    <div class="circle grey fadeAndSlide"></div>
-                    <div class="box blue fadeAndSlide"></div>
-                    <div class="box widerBox blue fadeAndSlide"></div>
-                    <div class="box grey fadeAndSlide"></div>
-                    <div class="box widerBox blue fadeAndSlide"></div>
-                    <div class="box blue fadeAndSlide"></div>
+                    <div class="box green fadeAndSlide hidden"></div>
+                    <div class="box wideBox orange fadeAndSlide hidden"></div>
+                    <div class="box grey fadeAndSlide hidden"></div>
+                    <div class="circle grey fadeAndSlide hidden"></div>
+                    <div class="box blue fadeAndSlide hidden"></div>
+                    <div class="box widerBox blue fadeAndSlide hidden"></div>
+                    <div class="box grey fadeAndSlide hidden"></div>
+                    <div class="box widerBox blue fadeAndSlide hidden"></div>
+                    <div class="box blue fadeAndSlide hidden"></div>
                 </div>
                 <div class="bar">
-                    <div class="box grey fadeAndSlide"></div>
-                    <div class="box widerBox blue fadeAndSlide"></div>
-                    <div class="box blue fadeAndSlide"></div>
-                    <div class="box widerBox blue fadeAndSlide"></div>
-                    <div class="box grey fadeAndSlide"></div>
-                    <div class="box wideBox orange fadeAndSlide"></div>
+                    <div class="box grey fadeAndSlide hidden"></div>
+                    <div class="box widerBox blue fadeAndSlide hidden"></div>
+                    <div class="box blue fadeAndSlide hidden"></div>
+                    <div class="box widerBox blue fadeAndSlide hidden"></div>
+                    <div class="box grey fadeAndSlide hidden"></div>
+                    <div class="box wideBox orange fadeAndSlide hidden"></div>
                 </div>
                 <div class="bar">
-                    <div class="box widerBox blue fadeAndSlide"></div>
-                    <div class="box blue fadeAndSlide"></div>
-                    <div class="box grey fadeAndSlide"></div>
-                    <div class="box wideBox orange fadeAndSlide"></div>
+                    <div class="box widerBox blue fadeAndSlide hidden"></div>
+                    <div class="box blue fadeAndSlide hidden"></div>
+                    <div class="box grey fadeAndSlide hidden"></div>
+                    <div class="box wideBox orange fadeAndSlide hidden"></div>
                 </div>
             </div>
         </div>
         <div class="Introduction fillPage" id="intro">
-    
-   
+
+
             <div class="Page" style="padding-left: 0;">
                 <h1 id="AboutH1">
                     Hi, I'm Simon Johansson.
@@ -703,19 +715,19 @@
             </div>
             <div class="asdf">
 
-                <div class="bar" >
-                   
-                    <div class="box wideBox orange second"style="margin-left: 0"></div>
+                <div class="bar">
+
+                    <div class="box wideBox orange second" style="margin-left: 0"></div>
                     <div class="box green first"></div>
                     <div class="box green first"></div>
                     <div class="box grey third"></div>
-                    
+
                 </div>
             </div>
             <div class="asdf">
 
-                <div class="bar"style="margin-bottom: 0px;">
-                    <div class="box green first"style="margin-left: 0"></div>
+                <div class="bar" style="margin-bottom: 0px;">
+                    <div class="box green first" style="margin-left: 0"></div>
                     <div class="box wideBox orange second"></div>
                     <div class="box grey third"></div>
                     <div class="box blue rest"></div>
@@ -728,10 +740,13 @@
                 </div>
             </div>
             <p>
-                Lorem ipsum, dolor sit amet consectetur adipisicing elit. Exercitationem porro dolor quae labore reprehenderit sapiente debitis, veniam iure repellat similique?
+                Lorem ipsum, dolor sit amet consectetur adipisicing elit. Exercitationem porro dolor quae labore
+                reprehenderit sapiente debitis, veniam iure repellat similique?
                 <br>
-                Lorem ipsum, dolor sit amet consectetur adipisicing elit. Exercitationem porro dolor quae labore reprehenderit sapiente debitis, veniam iure repellat similique? Exercitationem porro dolor quae labore reprehenderit sapiente debitis, veniam iure repellat.
-        
+                Lorem ipsum, dolor sit amet consectetur adipisicing elit. Exercitationem porro dolor quae labore
+                reprehenderit sapiente debitis, veniam iure repellat similique? Exercitationem porro dolor quae labore
+                reprehenderit sapiente debitis, veniam iure repellat.
+
             </p>
             <div class="asdf">
 
@@ -749,11 +764,11 @@
             <div class="asdf">
 
                 <div class="bar">
-                 
-                    <div class="box green first"style="margin-left: 0"></div>
+
+                    <div class="box green first" style="margin-left: 0"></div>
                     <div class="box blue rest"></div>
                     <div class="box wideBox orange second"></div>
-             
+
                     <div class="box blue rest"></div>
                     <div class="box blue rest"></div>
                 </div>
