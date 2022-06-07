@@ -4,14 +4,22 @@ import { TrackballControls } from 'https://cdn.skypack.dev/three@0.133/examples/
 import { TWEEN } from 'https://cdn.skypack.dev/three@0.133/examples/jsm/libs/tween.module.min.js';
 import Stats from 'https://cdn.skypack.dev/three@0.133/examples/jsm/libs/stats.module.js';
 import { GLTFLoader } from 'https://cdn.skypack.dev/three@0.133/examples/jsm/loaders/GLTFLoader.js';
+import { EffectComposer } from 'https://cdn.skypack.dev/three@0.133/examples/jsm/postprocessing/EffectComposer.js';
+import { RenderPass } from 'https://cdn.skypack.dev/three@0.133/examples/jsm/postprocessing/RenderPass.js';
+import { BokehPass } from 'https://cdn.skypack.dev/three@0.133/examples/jsm/postprocessing/BokehPass.js';
+import { BokehShader, BokehDepthShader } from 'https://cdn.skypack.dev/three@0.133/examples/jsm/shaders/BokehShader2.js';
 
 
 //Scene, camera and rendering:
 var scene = new THREE.Scene();
-var camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 1000);
+var camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 1, 3000);
 var renderer;
 var loadingManager = new THREE.LoadingManager();
-
+const postprocessing = { enabled: true };
+const shaderSettings = {
+    rings: 3,
+    samples: 4
+};
 var stats;
 
 //Controls:
@@ -30,8 +38,8 @@ var clock = new THREE.Clock();
 var delta = 0;
 var interactableMeshes = [];
 var cameraTarget;
-var mouseX;
-var mouseY;
+let windowHalfX = window.innerWidth / 2;
+let windowHalfY = window.innerHeight / 2;
 var theta = 0;
 var phi = 0;
 var radius = 3;
@@ -44,7 +52,7 @@ var currentFPS = 0;
 var endPosition = new THREE.Vector3();
 var cameraZoomSpeed = 15;
 var cameraStartPosition = new THREE.Vector3();
-
+var mouseX, mouseY;
 //Booleans
 var zoomInEnabled = false;
 var enableAnimationLoop = true;
@@ -74,6 +82,9 @@ function animate() {
     if (enableCameraMovement) {
         camera.position.lerp(cameraMoveTarget, 0.05);
     }
+
+    dofPostRendering();
+
     updateCamera();
 
     stats.update();
@@ -82,8 +93,67 @@ function animate() {
     controls.update();
     controls2.target.set(cameraTarget.x, cameraTarget.y, cameraTarget.z);
     controls2.update();
-    renderer.render(scene, camera);
+
+    //renderer.render(scene, camera);
+    //postprocessing.composer.render(0.1);
     TWEEN.update();
+}
+let distance = 100;
+function dofPostRendering() {
+    camera.updateMatrixWorld();
+    if (effectController.jsDepthCalculation) {
+
+        raycaster.setFromCamera(mouse, camera);
+
+        const intersects = raycaster.intersectObjects(scene.children, true);
+
+        const targetDistance = (intersects.length > 0) ? intersects[0].distance : 1000;
+
+        distance += (targetDistance - distance) * 0.03;
+
+        const sdistance = smoothstep(camera.near, camera.far, distance);
+
+        const ldistance = linearize(1 - sdistance);
+
+        postprocessing.bokeh_uniforms['focalDepth'].value = ldistance;
+
+        effectController['focalDepth'] = ldistance;
+
+    }
+
+    if (postprocessing.enabled) {
+
+        renderer.clear();
+
+        // render scene into texture
+
+        renderer.setRenderTarget(postprocessing.rtTextureColor);
+        renderer.clear();
+        renderer.render(scene, camera);
+
+        // render depth into texture
+
+        scene.overrideMaterial = materialDepth;
+        renderer.setRenderTarget(postprocessing.rtTextureDepth);
+        renderer.clear();
+        renderer.render(scene, camera);
+        scene.overrideMaterial = null;
+
+        // render bokeh composite
+
+        renderer.setRenderTarget(null);
+        renderer.render(postprocessing.scene, postprocessing.camera);
+
+
+    } else {
+
+        scene.overrideMaterial = null;
+
+        renderer.setRenderTarget(null);
+        renderer.clear();
+        renderer.render(scene, camera);
+
+    }
 }
 
 function evaluatePerformance() {
@@ -102,6 +172,11 @@ function evaluatePerformance() {
     }
 }
 
+function saturate(x) {
+
+    return Math.max(0, Math.min(1, x));
+
+}
 function sendPotatoMsg() {
     potdiv.style.right = "0";
     freezeBool = true;
@@ -128,14 +203,16 @@ function loadModels() {
         mesh.traverse(function (child) {
             if (child.isMesh) {
 
+                interactableMeshes.push(child);
 
 
                 if (child.material.map != null) {
 
                     var tmp = child.material;
-                    child.material = new THREE.MeshLambertMaterial({
+                    child.material = new THREE.MeshPhongMaterial({
                         map: tmp.map,
                         color: new THREE.Color("rgb(100, 125, 5)"),
+                        emissive: new THREE.Color("rgb(0, 0, 255)"),
                     })
                     //child.material.color = );
                     //child.material.color.setHSL(0.095, 1, 0.75);
@@ -161,6 +238,7 @@ function loadModels() {
     });
 
 }
+
 function init() {
 
     canvas = document.getElementById('three');
@@ -188,6 +266,7 @@ function init() {
     addLighting();
 
     renderer.domElement.addEventListener('click', onClick, false);
+    document.body.addEventListener('click', onClick, false);
     //renderer.domElement.addEventListener('mousemove', onDocumentMouseMove, false);
 
     window.addEventListener("resize", () => {
@@ -227,12 +306,14 @@ function init() {
     controls.update();
     controls2.target.set(cameraTarget.x, cameraTarget.y, cameraTarget.z);
     controls2.update();
-    console.log(controls2);
+
     //scene.add(new THREE.AxesHelper(500));
 
     //setTimeout(hideLoadingScreen, 500);
-
+    initBokeh();
+    //initPostprocessing();
     reset();
+
 }
 
 function enableHTML() {
@@ -282,6 +363,19 @@ function setRenderSettings() {
     renderer.toneMappingExposure = Math.pow(1.5, 4.0);
     document.body.appendChild(renderer.domElement);
 
+    ///OBS!
+    renderer.autoClear = false;
+
+}
+function onPointerMove(event) {
+
+    if (event.isPrimary === false) return;
+
+    mouse.x = (event.clientX - windowHalfX) / windowHalfX;
+    mouse.y = - (event.clientY - windowHalfY) / windowHalfY;
+
+    postprocessing.bokeh_uniforms['focusCoords'].value.set(event.clientX / window.innerWidth, 1 - (event.clientY / window.innerHeight));
+
 }
 
 function setupLoadingManager() {
@@ -301,7 +395,7 @@ function addMeshes() {
 }
 
 function addLighting() {
-    scene.add(new THREE.AmbientLight("white", 3));
+    scene.add(new THREE.AmbientLight("white", 1));
 }
 
 var tube
@@ -331,6 +425,122 @@ function zoomIn() {
     scene.add(tube);
     endPosition = new THREE.Vector3(cube.position.x, cube.position.y, cube.position.z + 2);
     zoom = true;
+}
+
+let materialDepth, effectController;
+
+function initBokeh() {
+    const depthShader = BokehDepthShader;
+    materialDepth = new THREE.ShaderMaterial({
+        uniforms: depthShader.uniforms,
+        vertexShader: depthShader.vertexShader,
+        fragmentShader: depthShader.fragmentShader
+    });
+    materialDepth.uniforms['mNear'].value = camera.near;
+    materialDepth.uniforms['mFar'].value = camera.far;
+
+    renderer.domElement.addEventListener('pointermove', onPointerMove);
+
+    effectController = {
+
+        enabled: true,
+        jsDepthCalculation: true,
+        shaderFocus: false,
+
+        fstop: 2.2,
+        maxblur: 1.0,
+
+        showFocus: false,
+        focalDepth: 2.8,
+        manualdof: false,
+        vignetting: false,
+        depthblur: false,
+
+        threshold: 0.5,
+        gain: 2.0,
+        bias: 0.5,
+        fringe: 0.7,
+
+        focalLength: 35,
+        noise: true,
+        pentagon: false,
+
+        dithering: 0.0001
+
+    };
+
+
+    postprocessing.scene = new THREE.Scene();
+
+    postprocessing.camera = new THREE.OrthographicCamera(window.innerWidth / - 2, window.innerWidth / 2, window.innerHeight / 2, window.innerHeight / - 2, - 10000, 10000);
+    postprocessing.camera.position.z = 0;
+
+
+    postprocessing.scene.add(postprocessing.camera);
+
+    postprocessing.rtTextureDepth = new THREE.WebGLRenderTarget(window.innerWidth, window.innerHeight);
+    postprocessing.rtTextureColor = new THREE.WebGLRenderTarget(window.innerWidth, window.innerHeight);
+
+    const bokeh_shader = BokehShader;
+
+    postprocessing.bokeh_uniforms = THREE.UniformsUtils.clone(bokeh_shader.uniforms);
+
+    postprocessing.bokeh_uniforms['tColor'].value = postprocessing.rtTextureColor.texture;
+    postprocessing.bokeh_uniforms['tDepth'].value = postprocessing.rtTextureDepth.texture;
+    postprocessing.bokeh_uniforms['textureWidth'].value = window.innerWidth;
+    postprocessing.bokeh_uniforms['textureHeight'].value = window.innerHeight;
+
+    postprocessing.materialBokeh = new THREE.ShaderMaterial({
+
+        uniforms: postprocessing.bokeh_uniforms,
+        vertexShader: bokeh_shader.vertexShader,
+        fragmentShader: bokeh_shader.fragmentShader,
+        defines: {
+            RINGS: shaderSettings.rings,
+            SAMPLES: shaderSettings.samples
+        }
+
+    });
+
+    postprocessing.quad = new THREE.Mesh(new THREE.PlaneGeometry(window.innerWidth, window.innerHeight), postprocessing.materialBokeh);
+    postprocessing.quad.position.z = -950;
+    postprocessing.scene.add(postprocessing.quad);
+
+}
+function smoothstep(near, far, depth) {
+
+    const x = saturate((depth - near) / (far - near));
+    return x * x * (3 - 2 * x);
+
+}
+
+function linearize(depth) {
+
+    const zfar = camera.far;
+    const znear = camera.near;
+    return - zfar * znear / (depth * (zfar - znear) - zfar);
+
+}
+function initPostprocessing() {
+
+    const renderPass = new RenderPass(scene, camera);
+
+    const bokehPass = new BokehPass(scene, camera, {
+        focus: 500,
+        aperture: 0.1,
+        maxblur: 0.01,
+
+        width: window.innerWidth,
+        height: window.innerHeight
+    });
+
+    const composer = new EffectComposer(renderer);
+    //composer.addPass(renderPass);
+    //composer.addPass(bokehPass);
+
+    postprocessing.composer = composer;
+    postprocessing.bokeh = bokehPass;
+
 }
 
 function updateCamera() {
@@ -364,8 +574,11 @@ function onClick() {
     }
     event.preventDefault();
 
-    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+    var canvasBounds = renderer.domElement.getBoundingClientRect();
+
+    mouse.x = ((event.clientX - canvasBounds.left) / (canvasBounds.right - canvasBounds.left)) * 2 - 1;
+    mouse.y = - ((event.clientY - canvasBounds.top) / (canvasBounds.bottom - canvasBounds.top)) * 2 + 1;
 
     raycaster.setFromCamera(mouse, camera);
 
@@ -376,7 +589,7 @@ function onClick() {
         for (let i = 0; i < intersects.length; i++) {
             if (intersects[i].object != undefined) {
                 //Clicked on any interactable mesh
-                console.log("CLICKED ON SOMETHING");
+                console.log("Clicked on: " + intersects[i].object.name);
                 if (zoomInEnabled) {
                     zoomIn();
                 }
@@ -426,25 +639,6 @@ function calculateCameraRotation() {
 var radScalar = 10;
 var minrad = 1.8;
 
-function scroll(event) {
-
-    return;
-    if (event.deltaY < 0) {
-        console.log('scrolling up');
-
-        if (radius >= 1.5) {
-            radius -= 0.1;
-        }
-        calculateCameraRotation();
-    }
-    else if (event.deltaY > 0) {
-        console.log('scrolling down');
-        if (radius <= 5)
-            radius += 0.1;
-        calculateCameraRotation();
-    }
-}
-
 var returnButton = document.getElementById("return-to-top");
 window.onscroll = function () { scrollFunction() };
 function scrollFunction() {
@@ -491,6 +685,12 @@ function onWindowResize() {
     renderer.setSize(window.innerWidth, window.innerHeight);
     //composer.setSize(width, height);
     //renderer.render();
+    postprocessing.rtTextureDepth.setSize(window.innerWidth, window.innerHeight);
+    postprocessing.rtTextureColor.setSize(window.innerWidth, window.innerHeight);
+
+    postprocessing.bokeh_uniforms['textureWidth'].value = window.innerWidth;
+    postprocessing.bokeh_uniforms['textureHeight'].value = window.innerHeight;
+    postprocessing.composer.setSize(window.innerWidth, window.innerHeight);
 }
 
 function calculateFPS() {
