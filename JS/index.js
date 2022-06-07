@@ -11,7 +11,7 @@ import { BokehShader, BokehDepthShader } from 'https://cdn.skypack.dev/three@0.1
 
 //Scene, camera and rendering:
 var scene = new THREE.Scene();
-var camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 50);
+var camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 10000);
 var renderer;
 var loadingManager = new THREE.LoadingManager();
 var postprocessing = {};
@@ -60,6 +60,14 @@ var enableCameraMovement = false;
 var statsDOM;
 var canvas;
 
+var minCameraYPos = 3.5;
+var cameraTargetY = 3.5;
+var cameraScalar = 1.4;
+var changeColors = false;
+var color;
+var color2 = new THREE.Color("rgb(55, 120, 200)");
+var rndColor;
+var rndClearColor = false;
 //Animation loop
 function animate() {
 
@@ -73,13 +81,30 @@ function animate() {
     delta = clock.getDelta();
 
     radius = minrad + ((window.scrollY) / document.body.offsetHeight) * radScalar;
+    cameraTargetY = minCameraYPos + ((window.scrollY) / document.body.offsetHeight) * cameraScalar;
 
     calculateCameraRotation();
     if (enableCameraMovement) {
-        camera.position.lerp(cameraMoveTarget, 0.05);
+        camera.position.lerp(cameraMoveTarget, 0.05 * 1 + delta);
     }
     updateCamera();
 
+    if (changeColors) {
+        interactableMeshes.forEach(e => {
+
+            e.material.color.lerp(color, 0.1 * 1 + delta)
+            if (e.material.color == color) {
+                changeColors = false;
+            }
+        });
+    }
+    if (rndClearColor) {
+        hemisphereTopColor.lerp(rndColor, 0.1 * 1 + delta);
+        hemiUniforms.topColor.value.lerp(rndColor, 0.1 * 1 + delta);
+        if (hemisphereTopColor == rndColor && hemiUniforms.topColor.value == rndClearColor) {
+            changeColors = false;
+        }
+    }
     stats.update();
 
     cameraTarget = controls.target;
@@ -132,7 +157,7 @@ function loadModels() {
         mesh.traverse(function (child) {
             if (child.isMesh) {
 
-
+                interactableMeshes.push(child);
 
                 if (child.material.map != null) {
 
@@ -191,9 +216,10 @@ function init() {
 
     stats = new Stats();
     statsDOM = document.body.appendChild(stats.dom);
-    addLighting();
+    addEnvironmentals();
 
     renderer.domElement.addEventListener('click', onClick, false);
+    document.body.addEventListener('click', onClick, false);
     //renderer.domElement.addEventListener('mousemove', onDocumentMouseMove, false);
 
     window.addEventListener("resize", () => {
@@ -244,12 +270,16 @@ function init() {
 function enableHTML() {
 
     CSSPlugin.defaultTransformPerspective = 800;
-
-    //Should happen when all is loaded, use loadmanager !
-    fadeInBoxes();
+    hideLoader();
 }
-function fadeInBoxes() {
-
+function hideLoader() {
+    gsap.fromTo(".lds-ring", { opacity: 1, }, {
+        opacity: 0,
+        duration: 1,
+        onComplete: fadeInHTML
+    });
+}
+function fadeInHTML() {
 
     gsap.fromTo(".fadeAndSlide", { x: 300 }, {
         x: 0,
@@ -268,6 +298,29 @@ function fadeInBoxes() {
 
 
     });
+    gsap.fromTo(".Footer", { opacity: 0, }, {
+        opacity: 1,
+        duration: 1.6,
+        stagger: {
+            amount: 2
+        },
+    });
+    gsap.set(".Menu", {
+        display: "block",
+        onComplete: function () {
+            console.log("bring in menu");
+        }
+    });
+
+    gsap.fromTo(".Menu", { opacity: 0, }, {
+        opacity: 1,
+        duration: 1.6,
+        stagger: {
+            amount: 2
+        },
+
+
+    });
 
 }
 
@@ -276,12 +329,12 @@ function allowScrolling() {
 }
 
 function setRenderSettings() {
-    renderer = new THREE.WebGLRenderer({ antialias: true, canvas: canvas, logarithmicDepthBuffer: true, })
+    renderer = new THREE.WebGLRenderer({ antialias: true, canvas: canvas })
     //renderer.shadowMap.enabled = true;
     //renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setClearColor(new THREE.Color("rgb(55, 120, 200)"));
+    renderer.setClearColor(color2);
 
     renderer.toneMapping = THREE.ReinhardToneMapping;
     //renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -305,9 +358,43 @@ function setupLoadingManager() {
 function addMeshes() {
     loadModels();
 }
+var hemisphereTopColor = new THREE.Color("rgb(55, 120, 200)");
+var hemiLight;
+var hemiUniforms;
+function addEnvironmentals() {
 
-function addLighting() {
-    scene.add(new THREE.AmbientLight("white", 1));
+    scene.fog = new THREE.Fog(scene.background, 10, 6000);
+
+    hemiLight = new THREE.HemisphereLight(0xffffff, hemisphereTopColor, 2);
+    hemiLight.color.setHSL(0.6, 1, 0.6);
+    hemiLight.groundColor.setHSL(0.095, 1, 0.75);
+    hemiLight.position.set(0, 50, 0);
+    scene.add(hemiLight);
+
+    const vertexShader = document.getElementById('vertexShader').textContent;
+    const fragmentShader = document.getElementById('fragmentShader').textContent;
+    hemiUniforms = {
+        'topColor': { value: hemisphereTopColor },
+        'bottomColor': { value: new THREE.Color(0xfafafa) },
+        'offset': { value: 60 },
+        'exponent': { value: 0.6 }
+    };
+
+    hemiUniforms['topColor'].value.copy(hemiLight.color);
+
+    scene.fog.color.copy(hemiUniforms['bottomColor'].value);
+
+    const skyGeo = new THREE.SphereGeometry(100, 32, 15);
+    const skyMat = new THREE.ShaderMaterial({
+        uniforms: hemiUniforms,
+        vertexShader: vertexShader,
+        fragmentShader: fragmentShader,
+        side: THREE.BackSide
+    });
+
+    const sky = new THREE.Mesh(skyGeo, skyMat);
+    scene.add(sky);
+
 }
 
 var tube
@@ -364,15 +451,20 @@ function updateCamera() {
     }
 
 }
-
+function changeColorOfMeshes() {
+    color = new THREE.Color(0xffffff);
+    color.setHex(Math.random() * 0xffffff);
+    changeColors = true;
+}
 function onClick() {
     if (controls.enabled == false) {
         return;
     }
     event.preventDefault();
+    var canvasBounds = renderer.domElement.getBoundingClientRect();
 
-    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+    mouse.x = ((event.clientX - canvasBounds.left) / (canvasBounds.right - canvasBounds.left)) * 2 - 1;
+    mouse.y = - ((event.clientY - canvasBounds.top) / (canvasBounds.bottom - canvasBounds.top)) * 2 + 1;
 
     raycaster.setFromCamera(mouse, camera);
 
@@ -380,17 +472,31 @@ function onClick() {
 
     if (intersects.length > 0) {
 
-        for (let i = 0; i < intersects.length; i++) {
-            if (intersects[i].object != undefined) {
-                //Clicked on any interactable mesh
-                console.log("CLICKED ON SOMETHING");
-                if (zoomInEnabled) {
-                    zoomIn();
-                }
+
+        if (intersects[0].object != undefined) {
+            //Clicked on any interactable mesh
+
+            if (intersects[0].object.name == "Cube022") {
+                changeColorOfMeshes();
+            }
+
+
+            if (zoomInEnabled) {
+                zoomIn();
             }
         }
 
+
+    } else {
+        console.log("clicked on the sky");
+        changeClearColor();
     }
+}
+
+function changeClearColor() {
+    rndColor = new THREE.Color(0xffffff);
+    rndColor.setHex(Math.random() * 0xffffff);
+    rndClearColor = true;
 }
 
 function onDocumentMouseMove(event) {
@@ -419,7 +525,7 @@ function calculateCameraRotation() {
         cameraMoveTarget.x = radius * Math.sin(theta * Math.PI - Math.PI / 2);
     }
     //camera.position.y = radius * Math.sin(phi * Math.PI / 360);
-    cameraMoveTarget.y = camera.position.y;
+    cameraMoveTarget.y = cameraTargetY;
     //camera.position.z = 
     if (enableFreeMode) {
         cameraMoveTarget.z = radius * Math.cos(theta * Math.PI - Math.PI / 2);
