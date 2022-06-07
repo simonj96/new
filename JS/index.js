@@ -5,9 +5,10 @@ import { TWEEN } from 'https://cdn.skypack.dev/three@0.133/examples/jsm/libs/twe
 import Stats from 'https://cdn.skypack.dev/three@0.133/examples/jsm/libs/stats.module.js';
 import { GLTFLoader } from 'https://cdn.skypack.dev/three@0.133/examples/jsm/loaders/GLTFLoader.js';
 import { EffectComposer } from 'https://cdn.skypack.dev/three@0.133/examples/jsm/postprocessing/EffectComposer.js';
-import { RenderPass } from 'https://cdn.skypack.dev/three@0.133/examples/jsm/postprocessing/RenderPass.js';
-import { BokehPass } from 'https://cdn.skypack.dev/three@0.133/examples/jsm/postprocessing/BokehPass.js';
-import { BokehShader, BokehDepthShader } from 'https://cdn.skypack.dev/three@0.133/examples/jsm/shaders/BokehShader2.js';
+import { SSAOPass } from 'https://cdn.skypack.dev/three@0.133/examples/jsm/postprocessing/SSAOPass.js';
+import { OutlinePass } from 'https://cdn.skypack.dev/three@0.133/examples/jsm/postprocessing/OutlinePass.js';
+import { FXAAShader } from 'https://cdn.skypack.dev/three@0.133/examples/jsm/shaders/FXAAShader.js';
+import { ShaderPass } from 'https://cdn.skypack.dev/three@0.133/examples/jsm/postprocessing/ShaderPass.js';
 
 //Scene, camera and rendering:
 var scene = new THREE.Scene();
@@ -68,6 +69,9 @@ var color;
 var color2 = new THREE.Color("rgb(55, 120, 200)");
 var rndColor;
 var rndClearColor = false;
+var composer;
+var outlinePass;
+var effectFXAA;
 //Animation loop
 function animate() {
 
@@ -87,6 +91,10 @@ function animate() {
     if (enableCameraMovement) {
         camera.position.lerp(cameraMoveTarget, 0.05 * 1 + delta);
     }
+
+    torusKnot.rotation.x += 0.01 + 1 * delta;
+    torusKnot.rotation.y += 0.01 + 1 * delta;
+
     updateCamera();
 
     if (changeColors) {
@@ -111,7 +119,10 @@ function animate() {
     controls.update();
     controls2.target.set(cameraTarget.x, cameraTarget.y, cameraTarget.z);
     controls2.update();
-    renderer.render(scene, camera);
+    //renderer.render(scene, camera);
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    composer.render();
     TWEEN.update();
 }
 
@@ -165,7 +176,7 @@ function loadModels() {
                     child.material = new THREE.MeshLambertMaterial({
                         map: tmp.map,
                         color: new THREE.Color("rgb(100, 125, 5)"),
-                        emissive: new THREE.Color("rgb(0, 0, 255)"),
+                        //emissive: new THREE.Color("rgb(0, 0, 255)"),
                     })
                     //child.material.color = );
                     //child.material.color.setHSL(0.095, 1, 0.75);
@@ -260,12 +271,35 @@ function init() {
     controls2.target.set(cameraTarget.x, cameraTarget.y, cameraTarget.z);
     controls2.update();
 
-    //scene.add(new THREE.AxesHelper(500));
-
-    //setTimeout(hideLoadingScreen, 500);
     reset();
 
+    composer = new EffectComposer(renderer);
+
+    const ssaoPass = new SSAOPass(scene, camera, window.innerWidth, window.innerHeight);
+    ssaoPass.kernelRadius = 32;
+    ssaoPass.minDistance = 0.001;
+    ssaoPass.maxDistance = 0.3;
+    composer.addPass(ssaoPass);
+
+    effectFXAA = new ShaderPass(FXAAShader);
+    effectFXAA.uniforms['resolution'].value.set(1 / window.innerWidth, 1 / window.innerHeight);
+    composer.addPass(effectFXAA);
+
+
+
+    const geometry = new THREE.TorusKnotGeometry(0.1, 0.04, 19, 16);
+    const material = new THREE.MeshLambertMaterial({ color: new THREE.Color("rgb(100, 125, 5)"), });
+
+    torusKnot = new THREE.Mesh(geometry, material);
+    torusKnot.position.x = 1.77;
+    torusKnot.position.y = 2.8;
+    torusKnot.position.z = 1.31;
+    torusKnot.name = "knot";
+    interactableMeshes.push(torusKnot);
+    scene.add(torusKnot);
+
 }
+var torusKnot;
 
 function enableHTML() {
 
@@ -335,10 +369,10 @@ function setRenderSettings() {
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setClearColor(color2);
-
+    renderer.outputEncoding = THREE.sRGBEncoding;
     renderer.toneMapping = THREE.ReinhardToneMapping;
     //renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = Math.pow(1.5, 4.0);
+    //renderer.toneMappingExposure = Math.pow(1.5, 4.0);
     document.body.appendChild(renderer.domElement);
 
 }
@@ -357,12 +391,15 @@ function setupLoadingManager() {
 
 function addMeshes() {
     loadModels();
+    //addTestCube();
 }
 var hemisphereTopColor = new THREE.Color("rgb(55, 120, 200)");
 var hemiLight;
 var hemiUniforms;
 function addEnvironmentals() {
 
+    const light = new THREE.AmbientLight(0x404040, 1); // soft white light
+    scene.add(light);
     scene.fog = new THREE.Fog(scene.background, 10, 6000);
 
     hemiLight = new THREE.HemisphereLight(0xffffff, hemisphereTopColor, 2);
@@ -476,7 +513,7 @@ function onClick() {
         if (intersects[0].object != undefined) {
             //Clicked on any interactable mesh
 
-            if (intersects[0].object.name == "Cube022") {
+            if (intersects[0].object.name == "Cube022" || intersects[0].object.name == "knot") {
                 changeColorOfMeshes();
             }
 
@@ -498,12 +535,42 @@ function changeClearColor() {
     rndColor.setHex(Math.random() * 0xffffff);
     rndClearColor = true;
 }
+function applyHoverEffect(mesh) {
+    const s = 1.3;
+    mesh.scale.set(s, s, s);
+    mesh.material.emissive = new THREE.Color("rgb(240,255,255)");
+    mesh.material.color = new THREE.Color("rgb(255, 255, 255)");
+
+}
+
+//this will bug 
+function clearHoverEffects() {
+    const s = 1;
+    torusKnot.scale.set(s, s, s);
+    torusKnot.material.emissive = "";
+    torusKnot.material.color = new THREE.Color("rgb(100, 125, 5)");
+
+
+}
 
 function onDocumentMouseMove(event) {
     event.preventDefault();
 
-    mouseX = (event.clientX - window.innerWidth / 2);
-    mouseY = (event.clientY - window.innerHeight / 2);
+    var canvasBounds = renderer.domElement.getBoundingClientRect();
+
+    mouse.x = ((event.clientX - canvasBounds.left) / (canvasBounds.right - canvasBounds.left)) * 2 - 1;
+    mouse.y = - ((event.clientY - canvasBounds.top) / (canvasBounds.bottom - canvasBounds.top)) * 2 + 1;
+
+    raycaster.setFromCamera(mouse, camera);
+
+    const intersects = raycaster.intersectObjects(interactableMeshes);
+    if (intersects.length > 0) {
+        if (intersects[0].object.name == "knot") {
+
+        }
+    }
+
+
 
     if (!enableMouseRotation) {
         return;
@@ -540,22 +607,7 @@ var radScalar = 10;
 var minrad = 1.8;
 
 function scroll(event) {
-
     return;
-    if (event.deltaY < 0) {
-        console.log('scrolling up');
-
-        if (radius >= 1.5) {
-            radius -= 0.1;
-        }
-        calculateCameraRotation();
-    }
-    else if (event.deltaY > 0) {
-        console.log('scrolling down');
-        if (radius <= 5)
-            radius += 0.1;
-        calculateCameraRotation();
-    }
 }
 
 var returnButton = document.getElementById("return-to-top");
@@ -602,9 +654,11 @@ function onWindowResize() {
     camera.updateProjectionMatrix();
 
     renderer.setSize(window.innerWidth, window.innerHeight);
+    composer.setSize(window.innerWidth, window.innerHeight);
     //composer.setSize(width, height);
     //renderer.render();
-    postprocessing.composer.setSize(width, height);
+
+    effectFXAA.uniforms['resolution'].value.set(1 / window.innerWidth, 1 / window.innerHeight);
 }
 
 function calculateFPS() {
@@ -641,6 +695,18 @@ function enable3D() {
     disableFPSChecker = false;
     canvas.style.display = "block";
 }
+function addTestCube() {
+    const geometry = new THREE.BoxGeometry();
+    const material = new THREE.MeshLambertMaterial({ color: 0x00ff00 });
+    cube = new THREE.Mesh(geometry, material);
+
+    //Initial cube position
+    cube.position.y = 1;
+    cube.position.x = 5;
+
+    scene.add(cube);
+
+}
 
 //Potato switch
 var pot;
@@ -660,9 +726,9 @@ pot.addEventListener('change', function () {
 var potdiv;
 potdiv = document.getElementById("potatoDiv");
 
-document.body.addEventListener('mousemove', e => { onDocumentMouseMove(e) });
+document.body.addEventListener('pointermove', e => { onDocumentMouseMove(e) });
 document.body.addEventListener('wheel', e => { scroll(e) });
-
+document.body.style.touchAction = 'none';
 
 init();
 animate();
