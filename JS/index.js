@@ -7,8 +7,7 @@ import { GLTFLoader } from 'https://cdn.skypack.dev/three@0.133/examples/jsm/loa
 import { EffectComposer } from 'https://cdn.skypack.dev/three@0.133/examples/jsm/postprocessing/EffectComposer.js';
 import { SSAOPass } from 'https://cdn.skypack.dev/three@0.133/examples/jsm/postprocessing/SSAOPass.js';
 import { OutlinePass } from 'https://cdn.skypack.dev/three@0.133/examples/jsm/postprocessing/OutlinePass.js';
-import { FXAAShader } from 'https://cdn.skypack.dev/three@0.133/examples/jsm/shaders/FXAAShader.js';
-import { ShaderPass } from 'https://cdn.skypack.dev/three@0.133/examples/jsm/postprocessing/ShaderPass.js';
+
 
 //Scene, camera and rendering:
 var scene = new THREE.Scene();
@@ -119,10 +118,8 @@ function animate() {
     controls.update();
     controls2.target.set(cameraTarget.x, cameraTarget.y, cameraTarget.z);
     controls2.update();
-    //renderer.render(scene, camera);
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    composer.render();
+    renderer.render(scene, camera);
+    //composer.render();
     TWEEN.update();
 }
 
@@ -279,11 +276,8 @@ function init() {
     ssaoPass.kernelRadius = 32;
     ssaoPass.minDistance = 0.001;
     ssaoPass.maxDistance = 0.3;
-    composer.addPass(ssaoPass);
+    //composer.addPass(ssaoPass);
 
-    effectFXAA = new ShaderPass(FXAAShader);
-    effectFXAA.uniforms['resolution'].value.set(1 / window.innerWidth, 1 / window.innerHeight);
-    composer.addPass(effectFXAA);
 
 
 
@@ -658,7 +652,7 @@ function onWindowResize() {
     //composer.setSize(width, height);
     //renderer.render();
 
-    effectFXAA.uniforms['resolution'].value.set(1 / window.innerWidth, 1 / window.innerHeight);
+    //effectFXAA.uniforms['resolution'].value.set(1 / window.innerWidth, 1 / window.innerHeight);
 }
 
 function calculateFPS() {
@@ -666,7 +660,7 @@ function calculateFPS() {
     frameTime += (thisFrameTime - frameTime) / filterStrength;
     lastLoop = thisLoop;
 }
-var freezeBool = false;
+var freezeBool = true;
 setInterval(function () {
     if (disableFPSChecker) {
         return;

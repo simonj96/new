@@ -607,6 +607,26 @@
         .hidden {
             opacity: 0;
         }
+        .inline {
+            flex-direction: row;
+            display: flex;
+            align-items: center;
+
+        }
+        .projectTitle{
+            margin-left: 12px;
+            margin-top: 0;
+            margin-bottom:0;
+        }
+        .projectLE{
+            margin-top: 16px;
+        }
+        .projectsHeader{
+           margin:0;
+        }
+        .prj{
+            
+        }
     </style>
 </head>
 
@@ -717,6 +737,25 @@
                 </div>
             </div>
         </div>
+     
+        <div class="Projects fillPage" id="proj">
+            <div class="projectsContainer">
+                <div class="projectsHeader inline">
+                    <div class="box blue" style="max-height: 14px; margin-right: 12px"></div>
+                    <h1>Projects</h1>
+                </div>
+          
+                <ul style="margin:0;list-style-type: none;">
+                    <li class="projectLE">
+                        <a class="prj inline">
+                        <i class="fa fa-linkedin"></i>
+                        <h2 class="projectTitle">Project 1</h2>
+                    </a>
+                    </li>         
+                </ul>
+            </div>
+        </div>
+          
         <div class="Introduction fillPage" id="intro">
 
 
@@ -786,106 +825,25 @@
                 </div>
             </div>
         </div>
-        <div class="Projects fillPage" id="proj">
-            <div class="asdf">
+        <a id="return-to-top"><i class="icon-chevron-up"></i></a>
+        <div class="Footer">
+            <ul>
+                <li>
+                    <a href="#" class="fa fa-linkedin"></a>
+                </li>
+            </ul>
+            <ul>
+                <li>
+                    <a href="#" class="fa fa-twitter"></a>
+                </li>
+            </ul>
+            <ul>
+                <li>
+                    <a href="#" class="fa fa-envelope"></a>
+                </li>
+            </ul>
 
-                <div class="bar">
-                    <div class="box green first"></div>
-                    <div class="box wideBox orange second"></div>
-                    <div class="box grey third"></div>
-                    <div class="box blue rest"></div>
-                    <div class="box widerBox blue rest"></div>
-                    <div class="box grey rest"></div>
-                    <div class="box widerBox blue rest"></div>
-                    <div class="box blue rest"></div>
-
-                </div>
-                <div class="bar">
-
-                    <div class="box grey third"></div>
-                    <div class="box widerBox blue rest"></div>
-                    <div class="box blue rest"></div>
-                    <div class="box widerBox blue rest"></div>
-                    <div class="box grey rest"></div>
-                    <div class="box wideBox orange second"></div>
-
-
-                </div>
-                <div class="bar">
-
-
-                    <div class="box widerBox blue rest"></div>
-                    <div class="box blue rest"></div>
-                    <div class="box grey rest"></div>
-                    <div class="box wideBox orange second"></div>
-
-
-                </div>
-            </div>
-
-            <div class="Page">
-                <h1>
-                    Simon Johansson
-                </h1>
-                <h2>
-                    Hej, jag heter Simon Johansson och är utbildad civilingenjör.
-                </h2>
-            </div>
-            <div class="asdf">
-
-                <div class="bar">
-                    <div class="box green first"></div>
-                    <div class="box wideBox orange second"></div>
-                    <div class="box grey third"></div>
-                    <div class="box blue rest"></div>
-                    <div class="box widerBox blue rest"></div>
-                    <div class="box grey rest"></div>
-                    <div class="box widerBox blue rest"></div>
-                    <div class="box blue rest"></div>
-                </div>
-                <div class="bar">
-
-                    <div class="box grey third"></div>
-                    <div class="box widerBox blue rest"></div>
-                    <div class="box blue rest"></div>
-                    <div class="box widerBox blue rest"></div>
-                    <div class="box grey rest"></div>
-                    <div class="box wideBox orange second"></div>
-
-
-                </div>
-                <div class="bar">
-
-
-                    <div class="box widerBox blue rest"></div>
-                    <div class="box blue rest"></div>
-                    <div class="box grey rest"></div>
-                    <div class="box wideBox orange second"></div>
-
-
-                </div>
-            </div>
-            <a id="return-to-top"><i class="icon-chevron-up"></i></a>
-            <div class="Footer">
-                <ul>
-                    <li>
-                        <a href="#" class="fa fa-linkedin"></a>
-                    </li>
-                </ul>
-                <ul>
-                    <li>
-                        <a href="#" class="fa fa-twitter"></a>
-                    </li>
-                </ul>
-                <ul>
-                    <li>
-                        <a href="#" class="fa fa-envelope"></a>
-                    </li>
-                </ul>
-
-            </div>
         </div>
-
 </body>
 <!-- GSAP -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.2.4/gsap.min.js"></script>
