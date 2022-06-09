@@ -6,7 +6,7 @@ import Stats from 'https://cdn.skypack.dev/three@0.133/examples/jsm/libs/stats.m
 import { GLTFLoader } from 'https://cdn.skypack.dev/three@0.133/examples/jsm/loaders/GLTFLoader.js';
 import { EffectComposer } from 'https://cdn.skypack.dev/three@0.133/examples/jsm/postprocessing/EffectComposer.js';
 import { SSAOPass } from 'https://cdn.skypack.dev/three@0.133/examples/jsm/postprocessing/SSAOPass.js';
-import { OutlinePass } from 'https://cdn.skypack.dev/three@0.133/examples/jsm/postprocessing/OutlinePass.js';
+
 
 
 //Scene, camera and rendering:
@@ -68,9 +68,12 @@ var color;
 var color2 = new THREE.Color("rgb(55, 120, 200)");
 var rndColor;
 var rndClearColor = false;
+var turnOnDisplay = false;
+var turnOffDisplay = false;
 var composer;
 var outlinePass;
 var effectFXAA;
+var minIntensity = 0.1;
 //Animation loop
 function animate() {
 
@@ -85,7 +88,7 @@ function animate() {
 
     radius = minrad + ((window.scrollY) / document.body.offsetHeight) * radScalar;
     cameraTargetY = minCameraYPos + ((window.scrollY) / document.body.offsetHeight) * cameraScalar;
-
+    hemiLight.intensity = minIntensity + ((window.scrollY) / document.body.offsetHeight);
     calculateCameraRotation();
     if (enableCameraMovement) {
         camera.position.lerp(cameraMoveTarget, 0.05 * 1 + delta);
@@ -112,15 +115,29 @@ function animate() {
             changeColors = false;
         }
     }
-    stats.update();
+    if (turnOnDisplay) {
+        display.material.emissive.lerp(standardDisplayEmissiveness, 0.03 * 1 + delta);
 
+        if (display.material.emissive == standardDisplayEmissiveness) {
+            turnOnDisplay = false;
+        }
+    }
+    if (turnOffDisplay) {
+        display.material.emissive.lerp(displayOffEmissive, 0.03 * 1 + delta);
+        display.material.color.lerp(displayOffColor, 0.03 * 1 + delta);
+        if (display.material.emissive == displayOffEmissive && display.material.color == displayOffColor) {
+            turnOffDisplay = false;
+        }
+    }
+    stats.update();
+    TWEEN.update();
     cameraTarget = controls.target;
     controls.update();
     controls2.target.set(cameraTarget.x, cameraTarget.y, cameraTarget.z);
     controls2.update();
     renderer.render(scene, camera);
     //composer.render();
-    TWEEN.update();
+
 }
 
 function evaluatePerformance() {
@@ -357,16 +374,16 @@ function allowScrolling() {
 }
 
 function setRenderSettings() {
-    renderer = new THREE.WebGLRenderer({ antialias: true, canvas: canvas })
+    renderer = new THREE.WebGLRenderer({ antialias: true, canvas: canvas, alpha: true })
     //renderer.shadowMap.enabled = true;
     //renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setClearColor(color2);
     renderer.outputEncoding = THREE.sRGBEncoding;
-    renderer.toneMapping = THREE.ReinhardToneMapping;
-    //renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    //renderer.toneMappingExposure = Math.pow(1.5, 4.0);
+    //renderer.toneMapping = THREE.ReinhardToneMapping;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 2;
     document.body.appendChild(renderer.domElement);
 
 }
@@ -374,7 +391,7 @@ function setRenderSettings() {
 function setupLoadingManager() {
 
     loadingManager.onProgress = function (item, loaded, total) {
-        console.log(item, loaded, total);
+        //console.log(item, loaded, total);
     };
 
     loadingManager.onLoad = function () {
@@ -385,6 +402,7 @@ function setupLoadingManager() {
 
 function addMeshes() {
     loadModels();
+    addDisplay();
     //addTestCube();
 }
 var hemisphereTopColor = new THREE.Color("rgb(55, 120, 200)");
@@ -392,11 +410,9 @@ var hemiLight;
 var hemiUniforms;
 function addEnvironmentals() {
 
-    const light = new THREE.AmbientLight(0x404040, 1); // soft white light
-    scene.add(light);
     scene.fog = new THREE.Fog(scene.background, 10, 6000);
 
-    hemiLight = new THREE.HemisphereLight(0xffffff, hemisphereTopColor, 2);
+    hemiLight = new THREE.HemisphereLight(0xfafafa, hemisphereTopColor, 0.1);
     hemiLight.color.setHSL(0.6, 1, 0.6);
     hemiLight.groundColor.setHSL(0.095, 1, 0.75);
     hemiLight.position.set(0, 50, 0);
@@ -529,23 +545,6 @@ function changeClearColor() {
     rndColor.setHex(Math.random() * 0xffffff);
     rndClearColor = true;
 }
-function applyHoverEffect(mesh) {
-    const s = 1.3;
-    mesh.scale.set(s, s, s);
-    mesh.material.emissive = new THREE.Color("rgb(240,255,255)");
-    mesh.material.color = new THREE.Color("rgb(255, 255, 255)");
-
-}
-
-//this will bug 
-function clearHoverEffects() {
-    const s = 1;
-    torusKnot.scale.set(s, s, s);
-    torusKnot.material.emissive = "";
-    torusKnot.material.color = new THREE.Color("rgb(100, 125, 5)");
-
-
-}
 
 function onDocumentMouseMove(event) {
     event.preventDefault();
@@ -612,12 +611,14 @@ function scrollFunction() {
         console.log("not at top");
         enableFreeMode = true;
         enableCameraRotation = true;
+        turnOnDisplay = true;
         document.getElementById("scroller").style.opacity = 0;
         returnButton.style.opacity = 0;
 
     } else {
         document.getElementById("scroller").style.opacity = 1;
         returnButton.style.opacity = 0;
+        turnOffDisplay = true;
         reset();
     }
     if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight) {
@@ -627,6 +628,98 @@ function scrollFunction() {
 
     }
 }
+var display;
+var standardDisplayEmissiveness;
+var displayOffColor = new THREE.Color("rgb(10, 10, 10)");
+var displayOffEmissive = new THREE.Color("rgb(0, 0, 0)");
+var projectElements = [];
+function addDisplay() {
+    standardDisplayEmissiveness = new THREE.Color("rgb(65, 65, 65)");
+    const geometry = new THREE.BoxGeometry(1.28, 0.78, 0.01);
+    const material = new THREE.MeshLambertMaterial({
+        emissive: new THREE.Color("rgb(0, 0, 0)"),
+        color: displayOffColor,
+    }); //new THREE.Color("rgb(164, 228, 240)")
+    display = new THREE.Mesh(geometry, material);
+    display.position.y = 3.17;
+    display.position.z = 1.51;
+
+    scene.add(display);
+
+    projectElements = document.getElementsByClassName("project");
+
+    hookupProjects();
+}
+function setFrontFaceDisplay(texture) {
+
+    const material = [
+        new THREE.MeshBasicMaterial({
+            color: 'grey'
+        }),
+        new THREE.MeshBasicMaterial({
+            color: 'grey'
+        }),
+        new THREE.MeshBasicMaterial({
+            color: 'grey'
+        }),
+        new THREE.MeshBasicMaterial({
+            color: 'grey'
+        }),
+        new THREE.MeshLambertMaterial({
+            emissive: standardDisplayEmissiveness,
+            map: texture,
+
+        }),
+        new THREE.MeshBasicMaterial({
+            color: 'grey'
+        })
+    ];
+
+    display.material = material;
+}
+var icon1;
+var defaultDisplayMaterial = new THREE.MeshBasicMaterial();
+
+function hookupProjects() {
+    //Hardcoded for now.
+
+    const textureLoader = new THREE.TextureLoader(loadingManager);
+    const txt = textureLoader.load('icons/paper.png');
+    txt.anisotropy = renderer.capabilities.getMaxAnisotropy();
+    txt.wrapS = THREE.RepeatWrapping;
+    txt.wrapT = THREE.RepeatWrapping;
+    //txt.minFilter = THREE.LinearFilter;
+    txt.repeat.set(10, 6); //5,3
+    txt.offset = new THREE.Vector2(0.5, 0.5);
+    txt.center = new THREE.Vector2(0.5, 0.5);
+    txt.updateMatrix();
+    //Project 1.
+    projectElements[0].addEventListener("mouseenter", function (event) {
+
+        console.log("Hovering project 1.");
+        animateDisplayStartup();
+        setFrontFaceDisplay(txt);
+    }, false);
+    projectElements[0].addEventListener("mouseleave", function (event) {
+
+        console.log("Leaving project 1.");
+        setFrontFaceDisplay("");
+    }, false);
+    //Project 2.
+    projectElements[1].addEventListener("mouseenter", function (event) {
+
+        console.log("Hovering project 2.");
+
+    }, false);
+    projectElements[1].addEventListener("mouseleave", function (event) {
+
+        console.log("Leaving project 2.");
+
+    }, false);
+
+}
+
+
 
 function reset() {
     cameraMoveTarget.copy(cameraStartPosition);

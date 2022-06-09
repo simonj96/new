@@ -607,25 +607,57 @@
         .hidden {
             opacity: 0;
         }
+
         .inline {
             flex-direction: row;
             display: flex;
             align-items: center;
-
         }
-        .projectTitle{
+
+        .projectTitle {
             margin-left: 12px;
             margin-top: 0;
-            margin-bottom:0;
+            margin-bottom: 0;
         }
-        .projectLE{
+
+        .projectsList {
+            margin: 0;
+            list-style-type: none;
+            width: 50%;
+        }
+
+        .projectLi {
             margin-top: 16px;
+            width: 80%;
         }
-        .projectsHeader{
-           margin:0;
+
+        .projectsHeader {
+            margin: 0;
         }
-        .prj{
-            
+
+
+        .hover-underline-animation {
+
+            position: relative;
+            color: #fafafa;
+        }
+
+        .hover-underline-animation:after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            transform: scaleX(0);
+            height: 5px;
+            bottom: -6px;
+            left: 0;
+            background-color: #fafafa;
+            transform-origin: bottom right;
+            transition: transform 0.25s ease-out;
+        }
+
+        .hover-underline-animation:hover:after {
+            transform: scaleX(1);
+            transform-origin: bottom right;
         }
     </style>
 </head>
@@ -737,25 +769,31 @@
                 </div>
             </div>
         </div>
-     
+
         <div class="Projects fillPage" id="proj">
             <div class="projectsContainer">
                 <div class="projectsHeader inline">
                     <div class="box blue" style="max-height: 14px; margin-right: 12px"></div>
                     <h1>Projects</h1>
                 </div>
-          
-                <ul style="margin:0;list-style-type: none;">
-                    <li class="projectLE">
-                        <a class="prj inline">
-                        <i class="fa fa-linkedin"></i>
-                        <h2 class="projectTitle">Project 1</h2>
-                    </a>
-                    </li>         
+
+                <ul class="projectsList">
+                    <li class="projectLi">
+                        <a class="project inline">
+                            <i class="fa fa-linkedin"></i>
+                            <h2 class="hover-underline-animation projectTitle">Project 1</h2>
+                        </a>
+                    </li>
+                    <li class="projectLi">
+                        <a class="project inline">
+                            <i class="fa fa-linkedin"></i>
+                            <h2 class="hover-underline-animation projectTitle">Project 2</h2>
+                        </a>
+                    </li>
                 </ul>
             </div>
         </div>
-          
+
         <div class="Introduction fillPage" id="intro">
 
 
