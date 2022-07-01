@@ -74,6 +74,7 @@ var composer;
 var outlinePass;
 var effectFXAA;
 var minIntensity = 0.1;
+var lerpTime = 1;
 //Animation loop
 function animate() {
 
@@ -108,26 +109,19 @@ function animate() {
             }
         });
     }
-    if (rndClearColor) {
+    if (hemisphereTopColor != null && rndColor != null) {
         hemisphereTopColor.lerp(rndColor, 0.1 * 1 + delta);
         hemiUniforms.topColor.value.lerp(rndColor, 0.1 * 1 + delta);
-        if (hemisphereTopColor == rndColor && hemiUniforms.topColor.value == rndClearColor) {
-            changeColors = false;
-        }
     }
+
     if (turnOnDisplay) {
+
         display.material.emissive.lerp(standardDisplayEmissiveness, 0.03 * 1 + delta);
 
-        if (display.material.emissive == standardDisplayEmissiveness) {
-            turnOnDisplay = false;
-        }
     }
     if (turnOffDisplay) {
-        display.material.emissive.lerp(displayOffEmissive, 0.03 * 1 + delta);
-        display.material.color.lerp(displayOffColor, 0.03 * 1 + delta);
-        if (display.material.emissive == displayOffEmissive && display.material.color == displayOffColor) {
-            turnOffDisplay = false;
-        }
+        display.material.emissive.lerp(displayOffEmissive, 0.05 * 1 + delta);
+        display.material.color.lerp(displayOffColor, 0.05 * 1 + delta);
     }
     stats.update();
     TWEEN.update();
@@ -611,6 +605,7 @@ function scrollFunction() {
         console.log("not at top");
         enableFreeMode = true;
         enableCameraRotation = true;
+        turnOffDisplay = false;
         turnOnDisplay = true;
         document.getElementById("scroller").style.opacity = 0;
         returnButton.style.opacity = 0;
@@ -619,6 +614,7 @@ function scrollFunction() {
         document.getElementById("scroller").style.opacity = 1;
         returnButton.style.opacity = 0;
         turnOffDisplay = true;
+        turnOnDisplay = false;
         reset();
     }
     if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight) {
@@ -697,13 +693,12 @@ function hookupProjects() {
     projectElements[0].addEventListener("mouseenter", function (event) {
 
         console.log("Hovering project 1.");
-        animateDisplayStartup();
-        setFrontFaceDisplay(txt);
+       // setFrontFaceDisplay(txt);
     }, false);
     projectElements[0].addEventListener("mouseleave", function (event) {
 
         console.log("Leaving project 1.");
-        setFrontFaceDisplay("");
+        //setFrontFaceDisplay("");
     }, false);
     //Project 2.
     projectElements[1].addEventListener("mouseenter", function (event) {
