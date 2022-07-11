@@ -11,7 +11,9 @@ import { SSAOPass } from 'https://cdn.skypack.dev/three@0.133/examples/jsm/postp
 
 //Scene, camera and rendering:
 var scene = new THREE.Scene();
-var camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 10000);
+var camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.01, 1000);
+//new THREE.OrthographicCamera( width / - 2, width / 2, height / 2, height / - 2, 1, 1000 );
+//new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 1000);
 var renderer;
 var loadingManager = new THREE.LoadingManager();
 var postprocessing = {};
@@ -56,6 +58,11 @@ var enableMouseRotation = true;
 var zoom = false;
 var disableFPSChecker = false;
 var enableCameraMovement = false;
+var rndClearColor = false;
+var turnOnDisplay = false;
+var turnOffDisplay = false;
+var changeColors = false;
+var displayState = false; //on/off
 //DOM
 var statsDOM;
 var canvas;
@@ -63,18 +70,22 @@ var canvas;
 var minCameraYPos = 3.5;
 var cameraTargetY = 3.5;
 var cameraScalar = 1.4;
-var changeColors = false;
+
 var color;
 var color2 = new THREE.Color("rgb(55, 120, 200)");
 var rndColor;
-var rndClearColor = false;
-var turnOnDisplay = false;
-var turnOffDisplay = false;
+
 var composer;
 var outlinePass;
 var effectFXAA;
 var minIntensity = 0.1;
 var lerpTime = 1;
+var hemiLerpColor;
+var displayLerpColor;
+var white = new THREE.Color("rgb(185, 185, 185)");
+var black =  new THREE.Color("rgb(0, 4, 7)");
+var orionColor = new THREE.Color("rgb(10, 10, 5)");
+var orionEmissiveColor = new THREE.Color("rgb(30, 30, 230)");
 //Animation loop
 function animate() {
 
@@ -87,10 +98,6 @@ function animate() {
     calculateFPS();
     delta = clock.getDelta();
 
-    radius = minrad + ((window.scrollY) / document.body.offsetHeight) * radScalar;
-    cameraTargetY = minCameraYPos + ((window.scrollY) / document.body.offsetHeight) * cameraScalar;
-    hemiLight.intensity = minIntensity + ((window.scrollY) / document.body.offsetHeight);
-    calculateCameraRotation();
     if (enableCameraMovement) {
         camera.position.lerp(cameraMoveTarget, 0.05 * 1 + delta);
     }
@@ -98,33 +105,16 @@ function animate() {
     torusKnot.rotation.x += 0.01 + 1 * delta;
     torusKnot.rotation.y += 0.01 + 1 * delta;
 
-    updateCamera();
+    calculateCameraRotation();
 
-    if (changeColors) {
-        interactableMeshes.forEach(e => {
+    lerpHemisphereColor();
+    lerpDisplay();
+    lerpTorusKnot();
 
-            e.material.color.lerp(color, 0.1 * 1 + delta)
-            if (e.material.color == color) {
-                changeColors = false;
-            }
-        });
-    }
-    if (hemisphereTopColor != null && rndColor != null) {
-        hemisphereTopColor.lerp(rndColor, 0.1 * 1 + delta);
-        hemiUniforms.topColor.value.lerp(rndColor, 0.1 * 1 + delta);
-    }
+    animateOrionsBelt();
 
-    if (turnOnDisplay) {
-
-        display.material.emissive.lerp(standardDisplayEmissiveness, 0.03 * 1 + delta);
-
-    }
-    if (turnOffDisplay) {
-        display.material.emissive.lerp(displayOffEmissive, 0.05 * 1 + delta);
-        display.material.color.lerp(displayOffColor, 0.05 * 1 + delta);
-    }
     stats.update();
-    TWEEN.update();
+    //TWEEN.update();
     cameraTarget = controls.target;
     controls.update();
     controls2.target.set(cameraTarget.x, cameraTarget.y, cameraTarget.z);
@@ -149,7 +139,33 @@ function evaluatePerformance() {
         return false;
     }
 }
+var hoveringKnot = false;
+var torusColor =  new THREE.Color("rgb(100, 125, 5)");
+function lerpTorusKnot(){
+    if(hoveringKnot) {
+        //holding, change color
+        torusKnot.material.color.lerp(white, 0.05 * 1 + delta);
+    } else {
+        //not holding, reset color
+        torusKnot.material.color.lerp(torusColor, 0.05 * 1 + delta);
+    }
+}
 
+function lerpDisplay(){
+    if(displayState) {
+        display.material.color.lerp(white, 0.05 * 1 + delta);
+    } else {
+        //display.material.emissive.lerp(black, 0.05 * 1 + delta);
+        display.material.color.lerp(displayOffColor, 0.05 * 1 + delta);
+    }
+}
+
+function lerpHemisphereColor(){
+    if(hemiLerpColor != null){
+        hemisphereTopColor.lerp(hemiLerpColor, 0.1 * 1 + delta); //rndColor, 0.1 * 1 + delta
+        hemiUniforms.topColor.value.lerp(hemiLerpColor, 0.1 * 1 + delta); //rndColor, 0.1 * 1 + delta
+        }
+}
 function sendPotatoMsg() {
     potdiv.style.right = "0";
     freezeBool = true;
@@ -163,7 +179,7 @@ function hidePotatoMsg() {
 
 function loadModels() {
     const loader = new GLTFLoader(loadingManager);
-    loader.load('models/composition.glb', function (gltf) {
+    loader.load('models/composition2.glb', function (gltf) {
 
         const mesh = gltf.scene;
 
@@ -183,15 +199,15 @@ function loadModels() {
                     var tmp = child.material;
                     child.material = new THREE.MeshLambertMaterial({
                         map: tmp.map,
-                        color: new THREE.Color("rgb(100, 125, 5)"),
-                        //emissive: new THREE.Color("rgb(0, 0, 255)"),
+                        //color: new THREE.Color("rgb(100, 125, 5)"),
+                        emissive: new THREE.Color("rgb(0, 0, 0)"),
                     })
                     //child.material.color = );
                     //child.material.color.setHSL(0.095, 1, 0.75);
                     child.material.flatShading = false;
                     child.geometry.computeVertexNormals();
 
-                    if (child.material.map) child.material.map.anisotropy = 8;
+                    if (child.material.map) child.material.map.anisotropy = 16;
                     child.material.needUpdate = true;
                     tmp.dispose();
                 }
@@ -224,9 +240,9 @@ function init() {
 
     //Camera initial position
 
-    camera.position.y = 3.5;
-    camera.position.x = 0;
-    camera.position.z = 1.8;
+    camera.position.y = 3.5; //3.5
+    camera.position.x = 0; //0
+    camera.position.z = 1.8;//1,8
 
     cameraStartPosition.copy(camera.position);
     cameraMoveTarget.copy(camera.position);
@@ -293,8 +309,7 @@ function init() {
 
 
     const geometry = new THREE.TorusKnotGeometry(0.1, 0.04, 19, 16);
-    const material = new THREE.MeshLambertMaterial({ color: new THREE.Color("rgb(100, 125, 5)"), });
-
+    const material = new THREE.MeshLambertMaterial({ color: torusColor, });
     torusKnot = new THREE.Mesh(geometry, material);
     torusKnot.position.x = 1.77;
     torusKnot.position.y = 2.8;
@@ -303,6 +318,8 @@ function init() {
     interactableMeshes.push(torusKnot);
     scene.add(torusKnot);
 
+
+    addOrionsBelt();
 }
 var torusKnot;
 
@@ -404,13 +421,14 @@ var hemiLight;
 var hemiUniforms;
 function addEnvironmentals() {
 
-    scene.fog = new THREE.Fog(scene.background, 10, 6000);
+    scene.fog = new THREE.Fog(scene.background, 1, 6000);
 
     hemiLight = new THREE.HemisphereLight(0xfafafa, hemisphereTopColor, 0.1);
-    hemiLight.color.setHSL(0.6, 1, 0.6);
+    //hemiLight.color.setHSL(0.6, 1, 0.6);
     hemiLight.groundColor.setHSL(0.095, 1, 0.75);
     hemiLight.position.set(0, 50, 0);
     scene.add(hemiLight);
+    
 
     const vertexShader = document.getElementById('vertexShader').textContent;
     const fragmentShader = document.getElementById('fragmentShader').textContent;
@@ -434,7 +452,7 @@ function addEnvironmentals() {
     });
 
     const sky = new THREE.Mesh(skyGeo, skyMat);
-    scene.add(sky);
+    //scene.add(sky);
 
 }
 
@@ -492,11 +510,7 @@ function updateCamera() {
     }
 
 }
-function changeColorOfMeshes() {
-    color = new THREE.Color(0xffffff);
-    color.setHex(Math.random() * 0xffffff);
-    changeColors = true;
-}
+
 function onClick() {
     if (controls.enabled == false) {
         return;
@@ -518,7 +532,7 @@ function onClick() {
             //Clicked on any interactable mesh
 
             if (intersects[0].object.name == "Cube022" || intersects[0].object.name == "knot") {
-                changeColorOfMeshes();
+                
             }
 
 
@@ -530,14 +544,9 @@ function onClick() {
 
     } else {
         console.log("clicked on the sky");
-        changeClearColor();
+        hemiLerpColor = new THREE.Color(0xffffff);
+        hemiLerpColor.setHex(Math.random() * 0xffffff);
     }
-}
-
-function changeClearColor() {
-    rndColor = new THREE.Color(0xffffff);
-    rndColor.setHex(Math.random() * 0xffffff);
-    rndClearColor = true;
 }
 
 function onDocumentMouseMove(event) {
@@ -553,10 +562,14 @@ function onDocumentMouseMove(event) {
     const intersects = raycaster.intersectObjects(interactableMeshes);
     if (intersects.length > 0) {
         if (intersects[0].object.name == "knot") {
-
+            hoveringKnot = true;
+        } else {
+            hoveringKnot = false;
         }
+    } else {
+        hoveringKnot = false;
     }
-
+ 
 
 
     if (!enableMouseRotation) {
@@ -574,6 +587,10 @@ var cameraMoveTarget = new THREE.Vector3();
 var enableFreeMode = false;
 function calculateCameraRotation() {
 
+    radius = minrad + ((window.scrollY) / document.body.offsetHeight) * radScalar;
+    cameraTargetY = minCameraYPos + ((window.scrollY) / document.body.offsetHeight) * cameraScalar;
+    hemiLight.intensity = minIntensity + ((window.scrollY) / document.body.offsetHeight/2);
+
     if (enableCameraRotation) {
         //camera.position.x = 
         cameraMoveTarget.x = radius * Math.sin(theta * Math.PI - Math.PI / 2);
@@ -587,7 +604,7 @@ function calculateCameraRotation() {
         cameraMoveTarget.z = radius;
     }
     //camera.updateMatrix();
-
+    updateCamera();
 }
 
 var radScalar = 10;
@@ -597,6 +614,8 @@ function scroll(event) {
     return;
 }
 
+var enableReset = false;
+var tempColor = new THREE.Color("rgb(0, 0, 0)");
 var returnButton = document.getElementById("return-to-top");
 window.onscroll = function () { scrollFunction() };
 function scrollFunction() {
@@ -605,17 +624,20 @@ function scrollFunction() {
         console.log("not at top");
         enableFreeMode = true;
         enableCameraRotation = true;
-        turnOffDisplay = false;
-        turnOnDisplay = true;
+        displayState = true;
+        enableReset = true;
         document.getElementById("scroller").style.opacity = 0;
         returnButton.style.opacity = 0;
 
     } else {
         document.getElementById("scroller").style.opacity = 1;
         returnButton.style.opacity = 0;
-        turnOffDisplay = true;
-        turnOnDisplay = false;
-        reset();
+        displayState = false;
+        if(enableReset) {
+            
+            reset();
+            enableReset = false;
+        }
     }
     if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight) {
         //at bottom
@@ -626,14 +648,14 @@ function scrollFunction() {
 }
 var display;
 var standardDisplayEmissiveness;
-var displayOffColor = new THREE.Color("rgb(10, 10, 10)");
+var displayOffColor = new THREE.Color("rgb(1, 2, 4)");
 var displayOffEmissive = new THREE.Color("rgb(0, 0, 0)");
 var projectElements = [];
 function addDisplay() {
     standardDisplayEmissiveness = new THREE.Color("rgb(65, 65, 65)");
     const geometry = new THREE.BoxGeometry(1.28, 0.78, 0.01);
-    const material = new THREE.MeshLambertMaterial({
-        emissive: new THREE.Color("rgb(0, 0, 0)"),
+    const material = new THREE.MeshBasicMaterial({
+        //emissive: new THREE.Color("rgb(0, 0, 0)"),
         color: displayOffColor,
     }); //new THREE.Color("rgb(164, 228, 240)")
     display = new THREE.Mesh(geometry, material);
@@ -711,13 +733,119 @@ function hookupProjects() {
         console.log("Leaving project 2.");
 
     }, false);
-
 }
 
 
+var instancedPyramids;
+var instancedBoxes;
+var dummy = new THREE.Object3D();
+var dummy2 = new THREE.Object3D();
+var boxPositions = [];
+var pyramidRotations = [];
+var pyramidPositions = [];
+var boxRotations = [];
+var angle = 0;
+var r = 50;
+function addOrionsBelt(){
+    //Create instanced mesh with a lot of cones (radial segment = 3 for pyramid).
+    //Create instanced mesh with a lot of boxes
+    
+    instancedPyramids = new THREE.InstancedMesh(new THREE.ConeGeometry( 0.3, 0.3, 3 ), new THREE.MeshLambertMaterial( {color:orionColor, emissive: orionEmissiveColor, emissiveIntensity: 0.1}),240);
+    instancedBoxes = new THREE.InstancedMesh(new THREE.BoxGeometry( 1, 1, 1 ), new THREE.MeshLambertMaterial( {color:orionColor, emissive: orionEmissiveColor, emissiveIntensity: 0.1}),240);
+    
+    for ( let i = 0; i < instancedBoxes.count; i ++ ) {
+        const theta =  2*Math.PI + i + Math.random()%0.2;
+        boxPositions.push(new THREE.Vector3(i%50, r * Math.cos(theta), r * Math.sin(theta)));
+        boxRotations.push((Math.random() < 0.5 ? -1 : 1)*Math.random()*3);
+    }
 
+    for ( let i = 0; i < instancedPyramids.count; i ++ ) {
+        const theta =  2*Math.PI + i + Math.random()%0.2;
+        pyramidPositions.push(new THREE.Vector3(i%100, r * Math.cos(theta), r * Math.sin(theta)));
+        pyramidRotations.push((Math.random() < 0.5 ? -1 : 1)*Math.random()*3);
+    }
+    instancedBoxes.position.x = -40;
+    instancedBoxes.position.y = -r+5;
+    instancedBoxes.position.z = -50;
+
+    instancedPyramids.position.x = -50;
+    instancedPyramids.position.y = -r+5;
+    instancedPyramids.position.z = -50;
+
+    scene.add(instancedPyramids);
+    scene.add(instancedBoxes);
+    //Spread them out in a circle forming a belt
+}
+
+function animateOrionsBelt(){
+
+    //rotate the two instanced meshes above
+    if(instancedPyramids != null) {
+        for ( let i = 0; i < instancedPyramids.count; i ++ ) {
+
+   
+            if(pyramidRotations[i] >= 1) {
+                pyramidRotations[i]+= 0.001 + 1 * delta;
+               
+            }
+            else {
+                pyramidRotations[i]-= 0.001 + 1 * delta;
+            }
+
+            dummy.rotation.y = pyramidRotations[i]/10;
+            dummy.rotation.z = pyramidRotations[i];
+            dummy.rotation.x = pyramidRotations[i]/10;
+
+            dummy.position.x = pyramidPositions[i].x;
+            dummy.position.y = pyramidPositions[i].y; //random offset
+            dummy.position.z = pyramidPositions[i].z;
+
+            dummy.updateMatrix();
+            instancedPyramids.setMatrixAt(i, dummy.matrix);
+            
+            
+        }
+        
+        instancedPyramids.rotation.x  = angle/10;
+        instancedPyramids.instanceMatrix.needsUpdate = true;
+
+    }
+
+    if(instancedBoxes != null) {
+        for ( let i = 0; i < instancedBoxes.count; i ++ ) {
+
+   
+            if(boxRotations[i] >= 1) {
+                boxRotations[i]+= 0.001 + 1 * delta;
+               
+            }
+            else {
+                boxRotations[i]-= 0.001 + 1 * delta;
+            }
+
+            dummy2.rotation.y = boxRotations[i]/10;
+            dummy2.rotation.z = boxRotations[i];
+            dummy2.rotation.x = boxRotations[i]/10;
+
+            dummy2.position.x = boxPositions[i].x;
+            dummy2.position.y = boxPositions[i].y; //random offset
+            dummy2.position.z = boxPositions[i].z;
+
+            dummy2.updateMatrix();
+            instancedBoxes.setMatrixAt(i, dummy2.matrix);
+            
+        }
+        
+        instancedBoxes.rotation.x  = angle/10;
+        instancedBoxes.instanceMatrix.needsUpdate = true;
+    }
+
+    angle += 0.001 + 1 * delta;
+}
 function reset() {
+    console.log("Calling reset function...");
     cameraMoveTarget.copy(cameraStartPosition);
+    //window.scrollTo({ top: 0, behavior: 'smooth' });
     enableFreeMode = false;
     enableCameraRotation = false;
 }
@@ -809,7 +937,7 @@ var potdiv;
 potdiv = document.getElementById("potatoDiv");
 
 document.body.addEventListener('pointermove', e => { onDocumentMouseMove(e) });
-document.body.addEventListener('wheel', e => { scroll(e) });
+//document.body.addEventListener('wheel', e => { scroll(e) });
 document.body.style.touchAction = 'none';
 
 init();
