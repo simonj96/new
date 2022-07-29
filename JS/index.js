@@ -5,6 +5,10 @@ import Stats from 'https://cdn.skypack.dev/three@0.133/examples/jsm/libs/stats.m
 import { GLTFLoader } from 'https://cdn.skypack.dev/three@0.133/examples/jsm/loaders/GLTFLoader.js';
 import { EffectComposer } from 'https://cdn.skypack.dev/three@0.133/examples/jsm/postprocessing/EffectComposer.js';
 import { SSAOPass } from 'https://cdn.skypack.dev/three@0.133/examples/jsm/postprocessing/SSAOPass.js';
+import { gsap } from "https://cdn.skypack.dev/gsap";
+import { ScrollTrigger } from "https://cdn.skypack.dev/gsap/ScrollTrigger.js";
+
+gsap.registerPlugin(ScrollTrigger);
 
 //Scene, camera and rendering:
 var scene = new THREE.Scene();
@@ -76,7 +80,7 @@ var lerpTime = 1;
 var hemiLerpColor;
 var displayLerpColor;
 var white = new THREE.Color("rgb(185, 185, 185)");
-var black =  new THREE.Color("rgb(0, 4, 7)");
+var black = new THREE.Color("rgb(0, 4, 7)");
 var orionColor = new THREE.Color("rgb(10, 10, 5)");
 var orionEmissiveColor = new THREE.Color("rgb(30, 30, 230)");
 //Animation loop
@@ -86,6 +90,7 @@ function animate() {
     if (!enableAnimationLoop) {
         return;
     }
+    return;
     beginTime = Date.now();
 
     //calculateFPS();
@@ -102,7 +107,7 @@ function animate() {
     calculateCameraRotation();
 
     lerpHemisphereColor();
-    lerpDisplay();
+    //lerpDisplay();
     lerpTorusKnot();
 
     stats.update();
@@ -116,8 +121,8 @@ function animate() {
 
 }
 
-function addPoster(){
-    
+function addPoster() {
+
 }
 
 function evaluatePerformance() {
@@ -136,9 +141,9 @@ function evaluatePerformance() {
     }
 }
 var hoveringKnot = false;
-var torusColor =  new THREE.Color("rgb(120, 120, 120)");
-function lerpTorusKnot(){
-    if(hoveringKnot) {
+var torusColor = new THREE.Color("rgb(120, 120, 120)");
+function lerpTorusKnot() {
+    if (hoveringKnot) {
         //holding, change color
         torusKnot.material.color.lerp(white, 0.05 * 1 + delta);
     } else {
@@ -147,23 +152,23 @@ function lerpTorusKnot(){
     }
 }
 
-function lerpDisplay(){
+function lerpDisplay() {
 
-    if(displayState) {
+    if (displayState) {
         display.material[4].color.lerp(white, 0.05 * 1 + delta);
-      
+
     } else {
-        console.log("Display OFF.")
+
         //display.material.emissive.lerp(black, 0.05 * 1 + delta);
         display.material[4].color.lerp(displayOffColor, 0.05 * 1 + delta);
     }
 }
 
-function lerpHemisphereColor(){
-    if(hemiLerpColor != null){
+function lerpHemisphereColor() {
+    if (hemiLerpColor != null) {
         hemisphereTopColor.lerp(hemiLerpColor, 0.1 * 1 + delta); //rndColor, 0.1 * 1 + delta
         hemiUniforms.topColor.value.lerp(hemiLerpColor, 0.1 * 1 + delta); //rndColor, 0.1 * 1 + delta
-        }
+    }
 }
 function sendPotatoMsg() {
     potdiv.style.right = "0";
@@ -190,7 +195,7 @@ function loadModels() {
 
         mesh.traverse(function (child) {
             if (child.isMesh) {
-              
+
                 interactableMeshes.push(child);
 
                 if (child.material.map != null) {
@@ -211,7 +216,7 @@ function loadModels() {
                     if (child.material.map) child.material.map.anisotropy = 16;
                     child.material.needUpdate = true;
                     tmp.dispose();
-                    
+
                 }
             }
         });
@@ -259,7 +264,9 @@ function init() {
     addEnvironmentals();
 
     renderer.domElement.addEventListener('click', onClick, false);
-    document.body.addEventListener('click', onClick, false);
+
+    document.getElementById("a").addEventListener('click', onClick, false);
+
     //renderer.domElement.addEventListener('mousemove', onDocumentMouseMove, false);
 
     window.addEventListener("resize", () => {
@@ -315,7 +322,7 @@ function init() {
 
     const geometry = new THREE.IcosahedronGeometry(0.2);
     const material = new THREE.MeshLambertMaterial({ color: torusColor, emissive: 0x000000 });
-    
+
     torusKnot = new THREE.Mesh(geometry, material);
     torusKnot.position.x = 1.75;
     torusKnot.position.y = 2.8;
@@ -331,7 +338,6 @@ var torusKnot;
 
 function enableHTML() {
 
-    CSSPlugin.defaultTransformPerspective = 800;
     hideLoader();
 }
 function hideLoader() {
@@ -341,6 +347,235 @@ function hideLoader() {
         onComplete: fadeInHTML
     });
 }
+function htmlAnimationSlideUp(object) {
+    setDisplayTypeHtmlObject(object, "block");
+
+    //weird formatting fix
+    gsap.fromTo("." + object, { y: 300 }, {
+        y: 0,
+        duration: 1,
+    });
+
+}
+
+function setDisplayTypeHtmlObject(object, displayType, id) {
+    const search = object.substring(1);
+    let currentDisplayType;
+
+    if (!id) {
+        currentDisplayType = window.getComputedStyle(getElementByClassName(search)).display;
+    } else {
+        currentDisplayType = window.getComputedStyle(getElementById(search)).display;
+    }
+    return gsap.fromTo(object, { display: currentDisplayType }, {
+        display: displayType,
+    });
+
+}
+
+function getElementByClassName(object) {
+
+    const temp = document.getElementsByClassName(object);
+    return temp[0];
+}
+function getElementById(object) {
+    const temp = document.getElementById(object);
+    return temp;
+}
+function htmlAnimationSlideDown(object) {
+
+    //weird formatting fix
+    gsap.fromTo("." + object, { y: 0 }, {
+        y: 100,
+        duration: 5,
+        onComplete: setDisplayTypeHtmlObject,
+        onCompleteParams: [("." + object), "none"],
+    });
+}
+var slideTimeline;
+function htmlAnimationSlideOut() {
+    slideTimeline = gsap.timeline().pause();
+
+    slideTimeline.add(gsap.fromTo(".slideLeft", { x: 0 }, {
+        x: -300,
+        duration: 0.5,
+        stagger: {
+            each: 0.1,
+            from: "edges",
+            grid: "auto",
+        },
+    }));
+
+    slideTimeline.add(setDisplayTypeHtmlObject(".container", "flex"), ">");
+
+    slideTimeline.add(setDisplayTypeHtmlObject(".projectNavigator", "flex"), ">");
+
+    slideTimeline.add(slide("previous", 100), "0.8");
+
+    slideTimeline.add(slide("next", 100), "0.8");
+
+    slideTimeline.add(slide("readingTitle", 100), "3");
+
+
+    slideTimeline.add(slide("btns_return", 50), ">-=1");
+
+
+    slideTimeline.add(slide("mainText", "100vh"), "0.5");
+
+
+}
+function slide(object, amount) {
+    return gsap.fromTo("." + object, { y: amount }, {
+        y: 0,
+        duration: 0.8,
+        delay: 1,
+        ease: "power2.easeInOut",
+        onComplete: setDisplayTypeHtmlObject,
+        onCompleteParams: [("." + object), "block"],
+    });
+}
+function htmlAnimationSlideIn() {
+    if (slideTimeline != null) {
+        console.log("REVERSING");
+        slideTimeline.reverse(0);
+
+    }
+}
+
+//if true -> fadeIn else fadeOut
+function setOpacityHtmlObject(object, opacity, duration) {
+    gsap.fromTo("." + object, { opacity: window.getComputedStyle(getElementByClassName(object)).opacity }, {
+        opacity: opacity,
+        duration: duration,
+    });
+}
+function clearProject() {
+    while (projectContentDiv.firstChild) {
+        projectContentDiv.removeChild(projectContentDiv.lastChild);
+    }
+}
+var projectContentDiv = getElementByClassName("par");
+var titleDiv = getElementByClassName("title");
+
+function addTextSegment(string) {
+    const text = document.createElement("p");
+    text.classList.add("mainText");
+    text.innerHTML = string;
+    projectContentDiv.appendChild(text);
+
+}
+function addTitle(string) {
+    const text = document.createElement("h1");
+    text.classList.add("readingTitle");
+    text.innerHTML = string;
+    titleDiv.appendChild(text);
+
+}
+function addPicture(src) {
+    const img = document.createElement("IMG");
+    img.classList.add("container_img");
+    img.src = src;
+    projectContentDiv.appendChild(img);
+}
+
+function openProject() {
+    openOverlay();
+    addTitle("HEEEELLO WORLD");
+    addTextSegment("Hello");
+    addPicture("https://images.unsplash.com/photo-1517911041065-4960862d38f0?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1952&q=80");
+    console.log("PLAYING")
+    slideTimeline.play();
+}
+
+function openOverlay() {
+
+    htmlAnimationSlideOut();
+    setDisplayTypeHtmlObject(".overlay", "block").play();
+    setOpacityHtmlObject("overlay", 1, 1);
+
+
+}
+function closeProject() {
+    htmlAnimationSlideIn()
+    //htmlAnimationSlideDown("previous");
+}
+//boolean = true = open, else close.
+function setProjectStatus(boolean) {
+    if (boolean) {
+
+        htmlAnimationSlideUp("previous");
+
+
+        gsap.fromTo(".container", { display: "none" }, {
+            display: "flex",
+            delay: 1
+        });
+
+        gsap.fromTo("#a", { display: "flex" }, {
+            display: "none",
+        });
+        gsap.fromTo(".projectNavigator", { display: "none" }, {
+            display: "flex",
+        });
+    } else {
+        htmlAnimationSlideDown(".previous");
+        gsap.fromTo(".container", { display: "flex" }, {
+
+            display: "none",
+            duration: 1,
+            onComplete: () => {
+                gsap.fromTo(".overlay", { display: "block" }, {
+                    display: "none",
+
+                    duration: 1,
+                    onComplete: () => {
+                        gsap.fromTo(".container", {}, {
+
+                        });
+                    }
+                })
+            },
+
+        });
+        gsap.fromTo("#a", { display: "none" }, {
+            display: "flex",
+        });
+        gsap.fromTo(".projectNavigator", { display: "flex" }, {
+            display: "none",
+        });
+    }
+
+    //Disable 3D
+}
+
+
+document.getElementById("return").addEventListener("click", function (event) {
+    closeProject();
+
+}, false);
+
+
+/*gsap.fromTo(".scrollTriggerSlideIn", {
+    scrollTrigger: {
+        trigger: ".projectsContainer"
+    },
+    
+    scrub:true,
+
+});*/
+
+gsap.fromTo(".scrollTriggerSlideIn", { width: 0 }, {
+    scrollTrigger: {
+        trigger: ".projectsContainer"
+    },
+    width: 30,
+    ease: "power4.easeIn",
+    duration: 1,
+    scrub: true,
+
+});
+
+
 function fadeInHTML() {
 
     gsap.fromTo(".fadeAndSlide", { x: 300 }, {
@@ -394,7 +629,7 @@ function setRenderSettings() {
     renderer = new THREE.WebGLRenderer({ antialias: true, canvas: canvas, alpha: true })
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setSize(window.innerWidth, window.innerHeight);
-    //renderer.setClearColor(color2);
+
     renderer.outputEncoding = THREE.sRGBEncoding;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     document.body.appendChild(renderer.domElement);
@@ -430,7 +665,7 @@ function addEnvironmentals() {
     hemiLight.groundColor.setHSL(0.095, 1, 0.75);
     hemiLight.position.set(0, 50, 0);
     scene.add(hemiLight);
-    
+
 
     const vertexShader = document.getElementById('vertexShader').textContent;
     const fragmentShader = document.getElementById('fragmentShader').textContent;
@@ -534,7 +769,7 @@ function onClick() {
             //Clicked on any interactable mesh
 
             if (intersects[0].object.name == "Cube022" || intersects[0].object.name == "knot") {
-                
+
             }
 
 
@@ -571,7 +806,7 @@ function onDocumentMouseMove(event) {
     } else {
         hoveringKnot = false;
     }
- 
+
 
 
     if (!enableMouseRotation) {
@@ -591,7 +826,7 @@ function calculateCameraRotation() {
 
     radius = minrad + ((window.scrollY) / document.body.offsetHeight) * radScalar;
     cameraTargetY = minCameraYPos + ((window.scrollY) / document.body.offsetHeight) * cameraScalar;
-    hemiLight.intensity = minIntensity + ((window.scrollY) / document.body.offsetHeight/2);
+    hemiLight.intensity = minIntensity + ((window.scrollY) / document.body.offsetHeight / 2);
 
     if (enableCameraRotation) {
         //camera.position.x = 
@@ -629,14 +864,14 @@ function scrollFunction() {
         returnButton.style.opacity = 0;
 
         displayState = false;
-        
-        if(enableReset) {
-            
+
+        if (enableReset) {
+
             reset();
             enableReset = false;
         }
     }
-    if (document.body.scrollTop > window.innerHeight - window.scrollY || document.documentElement.scrollTop >  window.innerHeight - window.scrollY ) {
+    if (document.body.scrollTop > window.innerHeight - window.scrollY || document.documentElement.scrollTop > window.innerHeight - window.scrollY) {
         displayState = true;
         enableFreeMode = true;
         enableCameraRotation = true;
@@ -654,7 +889,15 @@ var projectElements = [];
 function addDisplay() {
 
     const geometry = new THREE.BoxGeometry(1.28, 0.78, 0.01);
-    const material =  [new THREE.MeshBasicMaterial({
+
+    const textureLoader = new THREE.TextureLoader(loadingManager);
+    const displayTexture = textureLoader.load('icons/Display.png');
+
+    displayTexture.anisotropy = 0;
+    displayTexture.magFilter = THREE.NearestFilter;
+    displayTexture.minFilter = THREE.NearestFilter;
+
+    const material = [new THREE.MeshBasicMaterial({
         color: 'grey'
     }),
     new THREE.MeshBasicMaterial({
@@ -673,7 +916,9 @@ function addDisplay() {
     new THREE.MeshBasicMaterial({
         color: 'grey'
     })];
-    
+
+    setFrontFaceDisplay(displayTexture);
+
     display = new THREE.Mesh(geometry, material);
     display.position.y = 3.17;
     display.position.z = 1.51;
@@ -683,19 +928,20 @@ function addDisplay() {
 
     hookupProjects();
 }
+
 var tile;
 function setFrontFaceDisplay(texture) {
-    
+
     const tileGeometry = new THREE.BoxGeometry(1.28, 0.78, 0.01)
-    tile = new THREE.Mesh(tileGeometry , 
-    [
-        new THREE.MeshBasicMaterial({map:texture, alphaTest: 1}), // +x
-        new THREE.MeshBasicMaterial({map:texture, alphaTest: 1}), // -x
-        new THREE.MeshBasicMaterial({map:texture, alphaTest: 1}), // +y
-        new THREE.MeshBasicMaterial({map:texture, alphaTest: 1}), // -y
-        new THREE.MeshBasicMaterial({map:texture, transparent: true}), // +z
-        new THREE.MeshBasicMaterial({map:texture, alphaTest: 1})// -z
-    ]);
+    tile = new THREE.Mesh(tileGeometry,
+        [
+            new THREE.MeshBasicMaterial({ map: texture, alphaTest: 1 }), // +x
+            new THREE.MeshBasicMaterial({ map: texture, alphaTest: 1 }), // -x
+            new THREE.MeshBasicMaterial({ map: texture, alphaTest: 1 }), // +y
+            new THREE.MeshBasicMaterial({ map: texture, alphaTest: 1 }), // -y
+            new THREE.MeshBasicMaterial({ map: texture, transparent: true }), // +z
+            new THREE.MeshBasicMaterial({ map: texture, alphaTest: 1 })// -z
+        ]);
 
     scene.add(tile);
     tile.position.y = 3.17;
@@ -710,6 +956,7 @@ function hookupProjects() {
     const blank = textureLoader.load('icons/blank.png');
     paper.anisotropy = renderer.capabilities.getMaxAnisotropy();
     //Project 1
+    console.log(projectElements[0]);
     projectElements[0].addEventListener("mouseenter", function (event) {
 
         console.log("Hovering project 1.");
@@ -719,6 +966,10 @@ function hookupProjects() {
 
         console.log("Leaving project 1.");
         scene.remove(tile);
+    }, false);
+    projectElements[0].addEventListener("click", function (event) {
+
+        openProject();
     }, false);
     //Project 2.
     projectElements[1].addEventListener("mouseenter", function (event) {
@@ -735,6 +986,7 @@ function hookupProjects() {
 
 function reset() {
     console.log("Calling reset function...");
+
     cameraMoveTarget.copy(cameraStartPosition);
     //window.scrollTo({ top: 0, behavior: 'smooth' });
     enableFreeMode = false;
@@ -787,13 +1039,10 @@ setInterval(function () {
 function disable3D() {
     enableAnimationLoop = false;
     canvas.style.display = "none";
-    disableFPSChecker = true;
-    hidePotatoMsg();
 }
 
 function enable3D() {
     enableAnimationLoop = true;
-    disableFPSChecker = false;
     canvas.style.display = "block";
 }
 function addTestCube() {
@@ -812,6 +1061,7 @@ function addTestCube() {
 //Potato switch
 var pot;
 pot = document.getElementById("pot");
+console.log(pot);
 pot.addEventListener('change', function () {
     if (this.checked) {
         //Checked
@@ -822,13 +1072,12 @@ pot.addEventListener('change', function () {
         enable3D();
     }
 });
-
-//Potato div
-var potdiv;
-potdiv = document.getElementById("potatoDiv");
+pot.onclick = function () {
+    console.log("clicked");
+};
 
 document.body.addEventListener('pointermove', e => { onDocumentMouseMove(e) });
-document.body.style.touchAction = 'none';
+//document.body.style.touchAction = 'none';
 
 init();
 animate();

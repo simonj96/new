@@ -11,666 +11,17 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
     <link href="//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-    <style>
-        body {
-            margin: 0;
-            -ms-overflow-style: none;
-            /* IE and Edge */
-            scrollbar-width: none;
-            /* Firefox */
-            background-color: #2196F3;
-            font-family: 'Montserrat', sans-serif;
-            overflow: scroll;
-
-        }
-
-        html {
-            scroll-behavior: smooth;
-
-        }
-
-        /* Hide scrollbar for Chrome, Safari and Opera */
-        body::-webkit-scrollbar {
-            display: none;
-        }
-
-        #a {
-            display: flex;
-            flex-direction: column;
-
-            margin: 0;
-            padding: 0;
-            z-index: 98;
-
-        }
-
-        .fillPage {
-            height: 100vh;
-            z-index: 5;
-            display: -webkit-flexbox;
-            display: -ms-flexbox;
-            display: -webkit-flex;
-            display: flex;
-            flex-direction: column;
-            -webkit-flex-align: center;
-            -ms-flex-align: center;
-            justify-content: center;
-            padding-left: 5%;
-            width: 40%;
-        }
-
-        .fillPage p {
-            line-height: 20px;
-            margin-top: 30px;
-            margin-bottom: 30px;
-        }
-
-        .Page {
-
-            padding-left: 25px;
-
-        }
-
-        .Page h1 {
-
-            padding: 0;
-            margin-top: 6px;
-            font-size: 48px;
-
-        }
-
-        h1 {
-            color: #fafafa;
-        }
-
-        h2 {
-            color: #fafafa;
-        }
-
-        p {
-            color: #fafafa;
-        }
-
-
-        .Page h2 {
-            font-size: 24px;
-            font-weight: lighter;
-            margin-left: 0px;
-            margin-top: 0;
-            padding: 0;
-        }
-
-        canvas {
-
-            position: fixed;
-            top: 0;
-            left: 0;
-        }
-
-        #empty-page {
-            height: 100vh;
-            width: 100vh;
-        }
-
-        #b {
-            width: 100%;
-            height: 100%;
-            position: absolute;
-            display: flex;
-            justify-content: center;
-            flex-direction: column;
-            /*align-items: center;*/
-            z-index: 99;
-            transition: opacity 0.2s;
-
-        }
-
-        #potatoDiv {
-            overflow: none;
-            position: fixed;
-            z-index: 101;
-            bottom: 10%;
-            right: -500%;
-            flex-direction: row;
-            display: flex;
-            transition-timing-function: ease-in-out;
-            transition: right 1.7s;
-
-        }
-
-        @media (max-width: 1114px) {}
-
-        #potato {
-            background-color: aqua;
-
-        }
-
-        span {
-            display: flex;
-            align-items: center;
-
-        }
-
-        span p {
-            display: inline;
-
-        }
-
-        span img {
-            display: inline;
-
-        }
-
-        /* LOADING CIRCLE */
-        .lds-ring {
-            z-index: 9999;
-            position: fixed;
-            width: 80px;
-            height: 80px;
-            bottom: 50%;
-            left: calc(50% - 38px);
-        }
-
-        .lds-ring div {
-            box-sizing: border-box;
-            display: block;
-            position: absolute;
-            width: 64px;
-            height: 64px;
-            margin: 8px;
-            border: 8px solid rgb(2, 2, 2);
-            border-radius: 50%;
-            animation: lds-ring 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
-            border-color: rgb(226, 226, 226) transparent transparent transparent;
-        }
-
-        .lds-ring div:nth-child(1) {
-            animation-delay: -0.45s;
-        }
-
-        .lds-ring div:nth-child(2) {
-            animation-delay: -0.3s;
-        }
-
-        .lds-ring div:nth-child(3) {
-            animation-delay: -0.15s;
-        }
-
-        @keyframes lds-ring {
-            0% {
-                transform: rotate(0deg);
-            }
-
-            100% {
-                transform: rotate(360deg);
-            }
-        }
-
-        /* Potato Switch */
-        .switch {
-            position: relative;
-            display: inline-block;
-            width: 50px;
-            height: 26px;
-            margin-right: 7px;
-
-        }
-
-        .switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-
-        }
-
-        .slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            opacity: 0.5;
-            background-color: rgb(156, 156, 156);
-            -webkit-transition: .4s;
-            transition: .4s;
-        }
-
-        .slider:before {
-            position: absolute;
-            content: "";
-            height: 20px;
-            width: 20px;
-            left: 4px;
-            bottom: 3px;
-            background-color: rgb(255, 255, 255);
-            -webkit-transition: .4s;
-            transition: .4s;
-        }
-
-        input:checked+.slider {
-            background-color: #2196F3;
-        }
-
-        input:focus+.slider {
-            box-shadow: 0 0 1px #2196F3;
-        }
-
-        input:checked+.slider:before {
-            -webkit-transform: translateX(30px);
-            -ms-transform: translateX(30px);
-            transform: translateX(30px);
-        }
-
-        /* Rounded sliders */
-        .slider.round {
-            border-radius: 34px;
-        }
-
-        .slider.round:before {
-            border-radius: 50%;
-        }
-
-        #potatoSwitch {
-            position: fixed;
-            bottom: 0;
-            right: 0;
-            z-index: 120;
-            margin-right: 25px;
-            margin-bottom: 20px;
-
-        }
-
-
-        #potatoSwitch p {
-            margin-left: 10px;
-        }
-
-        /* gsap front page stuff*/
-        .box {
-            display: block;
-            min-height: 14px;
-            min-width: 35px;
-            margin: 5px;
-        }
-
-        .circle {
-            display: block;
-            min-height: 14px;
-            min-width: 14px;
-            margin: 5px;
-            border-radius: 100%;
-        }
-
-        .fadeAndSlide {}
-
-        .wideBox {
-            display: block;
-            min-height: 14px;
-            min-width: 70px;
-
-        }
-
-        .widerBox {
-            display: block;
-            min-height: 14px;
-            min-width: 105px;
-
-        }
-
-        .custom-box {
-            display: block;
-            min-height: 14px;
-            min-width: 57px;
-
-        }
-
-        .green {
-            background-color: green;
-        }
-
-        .orange {
-            background-color: orange;
-        }
-
-        .grey {
-            background-color: grey;
-        }
-
-        .blue {
-            background-color: blue;
-        }
-
-        .bar {
-            display: flex;
-            align-items: center;
-            height: 14px;
-            width: 25%;
-            margin-bottom: 5px;
-        }
-
-        .asdf {
-
-            width: 100%;
-
-        }
-
-        nav {
-            align-items: center;
-            display: flex;
-        }
-
-
-
-        /* @Media */
-        @media only screen and (max-width: 484px) {}
-
-        @media only screen and (max-width: 767px) {
-            .bar {
-                height: 7px;
-                margin-bottom: 5px;
-            }
-
-            .box {
-                display: block;
-
-                min-width: 15px;
-                margin: 2px;
-            }
-
-            .wideBox {
-                display: block;
-
-                min-width: 20px;
-                margin: 2px;
-            }
-
-            .widerBox {
-                display: block;
-
-                min-width: 55px;
-                margin: 2px;
-            }
-
-        }
-
-        @media only screen and (max-width: 1024px) {
-            .bar {
-                height: 11px;
-                margin-bottom: 7px;
-            }
-
-            .box {
-                display: block;
-
-                min-width: 25px;
-                margin: 2px;
-            }
-
-            .wideBox {
-                display: block;
-
-                min-width: 40px;
-                margin: 2px;
-            }
-
-            .widerBox {
-                display: block;
-
-                min-width: 75px;
-                margin: 2px;
-            }
-        }
-
-        .scroll-downs {
-            position: fixed;
-            opacity: 1;
-            right: 0;
-            bottom: 35px;
-            left: 0;
-            margin: auto;
-
-            width: 34px;
-            height: 55px;
-            transition: opacity 0.8s;
-            z-index: 5;
-        }
-
-        .mousey {
-            width: 3px;
-            padding: 10px 15px;
-            height: 35px;
-            border: 2px solid #fff;
-            border-radius: 25px;
-            opacity: 0.50;
-            box-sizing: content-box;
-
-        }
-
-        .scroller {
-            z-index: 1000;
-            width: 3px;
-            height: 10px;
-            border-radius: 25%;
-            background-color: #fff;
-            animation-name: scroll;
-            animation-duration: 2.2s;
-            animation-timing-function: cubic-bezier(.15, .41, .69, .94);
-            animation-iteration-count: infinite;
-        }
-
-        @keyframes scroll {
-            0% {
-                opacity: 0;
-            }
-
-            10% {
-                transform: translateY(0);
-                opacity: 1;
-            }
-
-            100% {
-                transform: translateY(15px);
-                opacity: 0;
-            }
-        }
-
-        #return-to-top {
-            position: fixed;
-            opacity: 0;
-            right: 0;
-            left: 0;
-            margin: auto;
-            bottom: 33px;
-            background: transparent;
-            border: 2px solid #fff;
-            width: 50px;
-            height: 50px;
-            text-decoration: none;
-            -webkit-border-radius: 35px;
-            -moz-border-radius: 35px;
-            border-radius: 35px;
-            display: block;
-            -webkit-transition: all 0.3s linear;
-            -moz-transition: all 0.3s ease;
-            -ms-transition: all 0.3s ease;
-            -o-transition: all 0.3s ease;
-            transition: all 0.3s ease;
-            transition: opacity 0.8s;
-            z-index: 11111;
-        }
-
-        #return-to-top i {
-            color: #fff;
-            margin: auto;
-            position: absolute;
-            left: 16px;
-            top: 13px;
-            font-size: 19px;
-            -webkit-transition: all 0.3s ease;
-            -moz-transition: all 0.3s ease;
-            -ms-transition: all 0.3s ease;
-            -o-transition: all 0.3s ease;
-            transition: all 0.3s ease;
-
-            animation-name: upNdown;
-            animation-duration: 2.2s;
-            animation-timing-function: cubic-bezier(.15, .41, .69, .94);
-            animation-iteration-count: infinite;
-        }
-
-        @keyframes upNdown {
-            0% {
-                opacity: 0;
-            }
-
-            10% {
-                transform: translateY(4px);
-                opacity: 1;
-            }
-
-            100% {
-                transform: translateY(-11px);
-                opacity: 0;
-            }
-        }
-
-        #return-to-top:hover {
-            background: rgba(0, 0, 0, 0.9);
-            z-index: 10;
-        }
-
-        #return-to-top:hover i {
-            color: #fff;
-            top: 5px;
-            z-index: 10;
-
-        }
-
-        .Menu {
-            opacity: 0;
-            position: fixed;
-            display: none;
-            right: 25px;
-            top: 0px;
-            transform-origin: bottom right;
-            transform: rotate(-90deg);
-            z-index: 9999;
-
-        }
-
-        .Menu a {
-            margin-right: 16px;
-            font-size: 22px;
-            font-weight: bold;
-            text-decoration: none;
-            cursor: pointer;
-            opacity: 0.5;
-            color: rgb(255, 255, 255);
-            transition: opacity 0.5s;
-        }
-
-        .Menu a:hover {
-            opacity: 1;
-        }
-
-        .Footer {
-            opacity: 0;
-            position: fixed;
-            z-index: 33;
-            right: 25px;
-            transform-origin: bottom right;
-            bottom: 60px;
-        }
-
-        .Footer ul li a {
-            font-size: 28px;
-            text-decoration: none;
-            opacity: 0.5;
-            color: rgb(255, 255, 255);
-            transition: opacity 0.4s;
-        }
-
-        .Footer ul li a:hover {
-            opacity: 1;
-        }
-
-        .Footer ul {
-            list-style: none;
-        }
-
-        #AboutH1 {
-            margin: 5px;
-            margin-bottom: 25px;
-        }
-
-        .hidden {
-            opacity: 0;
-        }
-
-        .inline {
-            flex-direction: row;
-            display: flex;
-            align-items: center;
-        }
-
-        .projectTitle {
-            margin-left: 12px;
-            margin-top: 0;
-            margin-bottom: 0;
-        }
-
-        .projectsList {
-            margin: 0;
-            list-style-type: none;
-            width: 50%;
-        }
-
-        .projectLi {
-            margin-top: 16px;
-            width: 80%;
-        }
-
-        .projectsHeader {
-            margin: 0;
-        }
-
-
-        .hover-underline-animation {
-
-            position: relative;
-            color: #fafafa;
-        }
-
-        .hover-underline-animation:after {
-            content: '';
-            position: absolute;
-            width: 100%;
-            transform: scaleX(0);
-            height: 5px;
-            bottom: -6px;
-            left: 0;
-            background-color: #fafafa;
-            transform-origin: bottom right;
-            transition: transform 0.25s ease-out;
-        }
-
-        .hover-underline-animation:hover:after {
-            transform: scaleX(1);
-            transform-origin: bottom right;
-        }
-    </style>
+    <link rel="stylesheet" href="./CSS/main.css">
 </head>
 
 <body>
     <canvas id="three"></canvas>
+
     <div class="Menu">
         <nav>
             <a href="#proj">Projects</a>
             <a href="#intro">About</a>
             <a href="#front" class="fa fa-circle" style="font-size: 15px; margin-left: 8px"></a>
-
-
         </nav>
     </div>
     <div class="scroll-downs" id="scroller">
@@ -679,22 +30,11 @@
         </div>
     </div>
     <span id="potatoSwitch">
-
         <label class="switch">
             <input type="checkbox" id="pot">
             <span class="slider round"></span>
         </label>
     </span>
-    <div id="potatoDiv">
-        <div id="potato">
-            <span>
-                <img src="https://i.gyazo.com/82ca2966b5fb221d9af00be8f5c98d4f.png" width="48" height="48"></img>
-                <p>Uh oh! The website is running slow, consider enabling the "Simple View"
-                    below!
-                </p>
-            </span>
-        </div>
-    </div>
     <div class="lds-ring">
         <div></div>
         <div></div>
@@ -702,89 +42,77 @@
         <div></div>
     </div>
 
+
+    <div class="projectNavigator">
+        <a href="#" class="previous">&laquo; Previous Project</a>
+        <a href="#" class="next">Next Project&raquo;</a>
+    </div>
+    <div class="Footer">
+        <ul>
+            <li>
+                <a href="#" class="fa fa-linkedin"></a>
+            </li>
+        </ul>
+        <ul>
+            <li>
+                <a href="#" class="fa fa-twitter"></a>
+            </li>
+        </ul>
+        <ul>
+            <li>
+                <a href="#" class="fa fa-envelope"></a>
+            </li>
+        </ul>
+
+    </div>
+    <div class='container'>
+
+        <div class="container_content">
+
+            <div class="container_content_inner">
+
+                <div class="title">
+
+                </div>
+                <div class="par">
+
+
+                </div>
+
+
+                <div class="btns">
+                    <button class='btns_return' id="return"> RETURN </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="overlay"></div>
+
+    </div>
     <div id="a">
 
         <div class="Front fillPage" id="front">
-            <div class="asdf">
-                <div class="bar">
-                    <div class="box green fadeAndSlide hidden"></div>
-                    <div class="box wideBox orange fadeAndSlide hidden"></div>
-                    <div class="box grey fadeAndSlide hidden"></div>
-                    <div class="circle grey fadeAndSlide hidden"></div>
-                    <div class="box blue fadeAndSlide hidden"></div>
-                    <div class="box widerBox blue fadeAndSlide hidden"></div>
-                    <div class="box grey fadeAndSlide hidden"></div>
-                    <div class="box widerBox blue fadeAndSlide hidden"></div>
-                    <div class="box blue fadeAndSlide hidden"></div>
 
-                </div>
-                <div class="bar ">
-                    <div class="box grey fadeAndSlide hidden"></div>
-                    <div class="box widerBox blue fadeAndSlide hidden"></div>
-                    <div class="box blue fadeAndSlide hidden"></div>
-                    <div class="box widerBox blue fadeAndSlide hidden"></div>
-                    <div class="box grey fadeAndSlide hidden"></div>
-                    <div class="box wideBox orange fadeAndSlide hidden"></div>
-                </div>
-                <div class="bar ">
-                    <div class="box widerBox blue fadeAndSlide hidden"></div>
-                    <div class="box blue fadeAndSlide hidden"></div>
-                    <div class="box grey fadeAndSlide hidden"></div>
-                    <div class="box wideBox orange fadeAndSlide hidden"></div>
-                </div>
-            </div>
-            <div class="Page">
-                <h1 class="fadeAndSlide hidden" style="margin-bottom: 0;">
-                    Simon Johansson
-                </h1>
-                <h2 class="fadeAndSlide hidden">
-                    Civil engineer in Interaction and Design.
-                </h2>
-            </div>
-            <div class="asdf">
-                <div class="bar">
-                    <div class="box green fadeAndSlide hidden"></div>
-                    <div class="box wideBox orange fadeAndSlide hidden"></div>
-                    <div class="box grey fadeAndSlide hidden"></div>
-                    <div class="circle grey fadeAndSlide hidden"></div>
-                    <div class="box blue fadeAndSlide hidden"></div>
-                    <div class="box widerBox blue fadeAndSlide hidden"></div>
-                    <div class="box grey fadeAndSlide hidden"></div>
-                    <div class="box widerBox blue fadeAndSlide hidden"></div>
-                    <div class="box blue fadeAndSlide hidden"></div>
-                </div>
-                <div class="bar">
-                    <div class="box grey fadeAndSlide hidden"></div>
-                    <div class="box widerBox blue fadeAndSlide hidden"></div>
-                    <div class="box blue fadeAndSlide hidden"></div>
-                    <div class="box widerBox blue fadeAndSlide hidden"></div>
-                    <div class="box grey fadeAndSlide hidden"></div>
-                    <div class="box wideBox orange fadeAndSlide hidden"></div>
-                </div>
-                <div class="bar">
-                    <div class="box widerBox blue fadeAndSlide hidden"></div>
-                    <div class="box blue fadeAndSlide hidden"></div>
-                    <div class="box grey fadeAndSlide hidden"></div>
-                    <div class="box wideBox orange fadeAndSlide hidden"></div>
-                </div>
-            </div>
         </div>
 
         <div class="Projects fillPage" id="proj">
             <div class="projectsContainer">
-                <div class="projectsHeader inline">
-                    <div class="box blue" style="max-height: 14px; margin-right: 12px"></div>
+                <div class="projectsHeader inline slideLeft">
+                    <div style="min-width: 48px;">
+                        <div class="box blue scrollTriggerSlideIn" style="max-height: 14px; margin-right: 12px"></div>
+                    </div>
                     <h1>Projects</h1>
                 </div>
 
                 <ul class="projectsList">
-                    <li class="projectLi">
+                    <li class="projectLi slideLeft">
                         <a class="project inline">
                             <i class="fa fa-linkedin"></i>
                             <h2 class="hover-underline-animation projectTitle">Project 1</h2>
                         </a>
                     </li>
-                    <li class="projectLi">
+                    <li class="projectLi slideLeft">
                         <a class="project inline">
                             <i class="fa fa-linkedin"></i>
                             <h2 class="hover-underline-animation projectTitle">Project 2</h2>
@@ -797,37 +125,12 @@
         <div class="Introduction fillPage" id="intro">
 
 
-            <div class="Page" style="padding-left: 0;">
+            <div class="Page">
                 <h1 id="AboutH1">
                     Hi, I'm Simon Johansson.
                 </h1>
             </div>
-            <div class="asdf">
 
-                <div class="bar">
-
-                    <div class="box wideBox orange second" style="margin-left: 0"></div>
-                    <div class="box green first"></div>
-                    <div class="box green first"></div>
-                    <div class="box grey third"></div>
-
-                </div>
-            </div>
-            <div class="asdf">
-
-                <div class="bar" style="margin-bottom: 0px;">
-                    <div class="box green first" style="margin-left: 0"></div>
-                    <div class="box wideBox orange second"></div>
-                    <div class="box grey third"></div>
-                    <div class="box blue rest"></div>
-                    <div class="box blue rest"></div>
-                    <div class="box green first"></div>
-                    <div class="box green first"></div>
-                    <div class="box wideBox orange second"></div>
-                    <div class="box grey third"></div>
-                    <div class="box blue rest"></div>
-                </div>
-            </div>
             <p>
                 Lorem ipsum, dolor sit amet consectetur adipisicing elit. Exercitationem porro dolor quae labore
                 reprehenderit sapiente debitis, veniam iure repellat similique?
@@ -837,54 +140,13 @@
                 reprehenderit sapiente debitis, veniam iure repellat.
 
             </p>
-            <div class="asdf">
 
-                <div class="bar">
-                    <div class="box green first" style="margin-left: 0"></div>
-                    <div class="box green first"></div>
-                    <div class="box green first"></div>
-                    <div class="box blue rest"></div>
-                    <div class="box wideBox orange second"></div>
-                    <div class="box grey third"></div>
-                    <div class="box blue rest"></div>
-                    <div class="box blue rest"></div>
-                </div>
-            </div>
-            <div class="asdf">
-
-                <div class="bar">
-
-                    <div class="box green first" style="margin-left: 0"></div>
-                    <div class="box blue rest"></div>
-                    <div class="box wideBox orange second"></div>
-
-                    <div class="box blue rest"></div>
-                    <div class="box blue rest"></div>
-                </div>
-            </div>
         </div>
         <a id="return-to-top"><i class="icon-chevron-up"></i></a>
-        <div class="Footer">
-            <ul>
-                <li>
-                    <a href="#" class="fa fa-linkedin"></a>
-                </li>
-            </ul>
-            <ul>
-                <li>
-                    <a href="#" class="fa fa-twitter"></a>
-                </li>
-            </ul>
-            <ul>
-                <li>
-                    <a href="#" class="fa fa-envelope"></a>
-                </li>
-            </ul>
 
-        </div>
 </body>
 <!-- GSAP -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.2.4/gsap.min.js"></script>
+
 <script type="x-shader/x-vertex" id="vertexShader">
 
     varying vec3 vWorldPosition;
